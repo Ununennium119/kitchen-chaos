@@ -1,0 +1,53 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d777d270cee3a5c419cb21a828556f1a, type: 3}
+  m_Name: CodeMonkeyFreeSO
+  m_EditorClassIdentifier: 
+  currentVersion: 1.00
+  subtype: kitchenchaos
+  lastShownTimestamp: 1742461386
+  lastUpdateResponse:
+    version: 1.00
+    versionUrl: https://unitycodemonkey.com
+  checkedLastUpdateTimestamp: 1742461386
+  lastQOTDResponse:
+    questionId: 146
+    questionText: The Profiler is useful for...
+    answerA: Balancing difficulty
+    answerB: Level Design
+    answerC: Indentifying performance bottlenecks
+    answerD: 
+    answerE: 
+  lastQotdTimestamp: 1742461386
+  lastDynamicHeaderResponse:
+    topImageUrl: https://codemonkeyexternal.blob.core.windows.net/external/Misc/Gif_FreeCourses.gif
+    topText: Learn Unity and C# with my Complete FREE Courses!
+    topLink: freecourses
+    bottomText: My 10+ Years of C# Knowledge in 1 Course!
+    bottomLink: csharpcourse
+  lastDynamicHeaderTimestamp: 1742461386
+  websiteLatestMessage:
+    text: <a href="https://cmonkey.co/tictactoenfefree">I just published my latest
+      FREE course! Click here!</a>
+  websiteLatestMessageTimestamp: 1742461386
+  websiteLatestVideos:
+    videos:
+    - youTubeId: 7xYkle9adR8
+      title: TOP 20 Visual Assets to INSPIRE YOU! (JANUARY 2025)
+    - youTubeId: -3EVvJ8kr1U
+      title: Learn Netcode for Entities (FREE Course, SUPER FAST Multiplayer with
+        Unity DOTS)
+    - youTubeId: O7ta2WObdxc
+      title: Another FREE Course Incoming!
+    - youTubeId: vzEJ08YdKPo
+      title: TOP 10 NEW Systems and Tools JANUARY 2025! | Unity Asset Store
+  websiteLatestVideosTimestamp: 1742461386
