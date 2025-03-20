@@ -1,8 +1,6 @@
-using System;
 using UnityEngine;
 
-public class PlayerAnimator : MonoBehaviour
-{
+public class PlayerAnimator : MonoBehaviour {
     private static readonly int IsWalking = Animator.StringToHash("IsWalking");
 
 
