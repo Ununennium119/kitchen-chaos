@@ -1,13 +1,17 @@
 using System;
+using Counter;
 using UnityEngine;
 
-public class Player : MonoBehaviour {
+public class Player : MonoBehaviour, IKitchenObjectParent {
     public static Player Instance { get; private set; }
 
+
     public event EventHandler<OnSelectedCounterChangedArgs> OnSelectedCounterChanged;
+
     public class OnSelectedCounterChangedArgs : EventArgs {
-        public ClearCounter SelectedCounter;
+        public BaseCounter SelectedCounter;
     }
+
 
     [Header("Player Stats")]
     [SerializeField] private float velocity = 7.5f;
@@ -18,11 +22,15 @@ public class Player : MonoBehaviour {
 
     [Header("Input & Detection")]
     [SerializeField] private GameInput gameInput;
-    [SerializeField] private LayerMask clearCounterLayer;
+    [SerializeField] private LayerMask counterLayer;
+
+    [Header("Other")]
+    [SerializeField] private Transform holdPoint;
 
 
     private bool _isWalking;
-    private ClearCounter _selectedCounter;
+    private BaseCounter _selectedCounter;
+    private KitchenObject _kitchenObject;
 
 
     private void Awake() {
@@ -50,6 +58,27 @@ public class Player : MonoBehaviour {
 
     public bool IsWalking() {
         return _isWalking;
+    }
+
+
+    public Transform GetKitchenObjectFollowTransform() {
+        return holdPoint;
+    }
+
+    public KitchenObject GetKitchenObject() {
+        return _kitchenObject;
+    }
+
+    public void SetKitchenObject(KitchenObject kitchenObject) {
+        _kitchenObject = kitchenObject;
+    }
+
+    public void ClearKitchenObject() {
+        _kitchenObject = null;
+    }
+
+    public bool HasKitchenObject() {
+        return _kitchenObject != null;
     }
 
 
@@ -99,22 +128,22 @@ public class Player : MonoBehaviour {
             transform.forward,
             out var hitInfo,
             interactDistance,
-            clearCounterLayer
+            counterLayer
         );
         if (!didRaycastHit) {
             SetSelectedCounter(null);
             return;
         }
-        if (!hitInfo.transform.TryGetComponent(out ClearCounter clearCounter)) {
+        if (!hitInfo.transform.TryGetComponent(out BaseCounter counter)) {
             SetSelectedCounter(null);
             return;
         }
 
-        SetSelectedCounter(clearCounter);
+        SetSelectedCounter(counter);
     }
 
-    private void SetSelectedCounter(ClearCounter clearCounter) {
-        _selectedCounter = clearCounter;
+    private void SetSelectedCounter(BaseCounter counter) {
+        _selectedCounter = counter;
         OnSelectedCounterChanged?.Invoke(
             this,
             new OnSelectedCounterChangedArgs { SelectedCounter = _selectedCounter }
@@ -122,6 +151,6 @@ public class Player : MonoBehaviour {
     }
 
     private void OnInteractAction(object sender, EventArgs e) {
-        _selectedCounter?.Interact();
+        _selectedCounter?.Interact(this);
     }
 }
