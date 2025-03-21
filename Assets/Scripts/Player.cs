@@ -2,6 +2,13 @@ using System;
 using UnityEngine;
 
 public class Player : MonoBehaviour {
+    public static Player Instance { get; private set; }
+
+    public event EventHandler<OnSelectedCounterChangedArgs> OnSelectedCounterChanged;
+    public class OnSelectedCounterChangedArgs : EventArgs {
+        public ClearCounter SelectedCounter;
+    }
+
     [Header("Player Stats")]
     [SerializeField] private float velocity = 7.5f;
     [SerializeField] private float rotationSpeed = 10f;
@@ -15,20 +22,29 @@ public class Player : MonoBehaviour {
 
 
     private bool _isWalking;
+    private ClearCounter _selectedCounter;
 
+
+    private void Awake() {
+        if (Instance == null) {
+            Instance = this;
+        } else {
+            Debug.LogError("There are multiple instances of Player!");
+        }
+    }
 
     private void Start() {
         gameInput.OnInteract += OnInteractAction;
     }
 
     private void Update() {
-        var movementVector = gameInput.GetPlayerMovementVectorNormalized();
-
         // Calculate movement direction
+        var movementVector = gameInput.GetPlayerMovementVectorNormalized();
         var movementDirection = new Vector3(movementVector.x, 0, movementVector.y);
         _isWalking = movementDirection != Vector3.zero;
 
         HandleMovement(movementDirection);
+        HandleInteraction();
     }
 
 
@@ -77,7 +93,7 @@ public class Player : MonoBehaviour {
         );
     }
 
-    private void OnInteractAction(object sender, EventArgs e) {
+    private void HandleInteraction() {
         var didRaycastHit = Physics.Raycast(
             transform.position,
             transform.forward,
@@ -85,10 +101,27 @@ public class Player : MonoBehaviour {
             interactDistance,
             clearCounterLayer
         );
-        if (!didRaycastHit) return;
-
-        if (hitInfo.transform.TryGetComponent(out ClearCounter clearCounter)) {
-            clearCounter.Interact();
+        if (!didRaycastHit) {
+            SetSelectedCounter(null);
+            return;
         }
+        if (!hitInfo.transform.TryGetComponent(out ClearCounter clearCounter)) {
+            SetSelectedCounter(null);
+            return;
+        }
+
+        SetSelectedCounter(clearCounter);
+    }
+
+    private void SetSelectedCounter(ClearCounter clearCounter) {
+        _selectedCounter = clearCounter;
+        OnSelectedCounterChanged?.Invoke(
+            this,
+            new OnSelectedCounterChangedArgs { SelectedCounter = _selectedCounter }
+        );
+    }
+
+    private void OnInteractAction(object sender, EventArgs e) {
+        _selectedCounter?.Interact();
     }
 }

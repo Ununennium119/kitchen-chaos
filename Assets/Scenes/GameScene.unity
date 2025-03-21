@@ -556,7 +556,7 @@ MonoBehaviour:
   rotationSpeed: 10
   height: 2
   radius: 0.7
-  interactDistance: 1.5
+  interactDistance: 2
   gameInput: {fileID: 380941091}
   clearCounterLayer:
     serializedVersion: 2

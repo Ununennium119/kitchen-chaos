@@ -5,7 +5,6 @@ using UnityEngine.InputSystem;
 public class GameInput : MonoBehaviour {
     public event EventHandler OnInteract;
 
-
     private InputSystemActions _inputSystemActions;
 
 
