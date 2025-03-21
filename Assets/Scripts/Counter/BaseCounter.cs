@@ -11,6 +11,10 @@ namespace Counter {
         public virtual void Interact(Player player) {
             throw new NotImplementedException("BaseCounter.Interact is not implemented!");
         }
+        
+        public virtual void InteractAlternate() {
+            throw new NotImplementedException("BaseCounter.Interact is not implemented!");
+        }
 
 
         public Transform GetKitchenObjectFollowTransform() {

@@ -1,15 +1,25 @@
-using ScriptableObjects.KitchenObjects;
+using ScriptableObjects;
 using UnityEngine;
+using UnityEngine.Serialization;
 
 public class KitchenObject : MonoBehaviour {
-    [SerializeField] private KitchenObjectScriptable kitchenObjectScriptable;
+    [SerializeField] private KitchenObjectScriptableObject kitchenObjectScriptableObject;
 
 
     private IKitchenObjectParent _parent;
 
 
-    public KitchenObjectScriptable GetKitchenObjectScriptable() {
-        return kitchenObjectScriptable;
+    public static void SpawnKitchenObject(
+        KitchenObjectScriptableObject kitchenObjectScriptableObject,
+        IKitchenObjectParent parent
+    ) {
+        var kitchenObjectTransform = Instantiate(kitchenObjectScriptableObject.prefab);
+        kitchenObjectTransform.GetComponent<KitchenObject>().SetParent(parent);
+    }
+
+
+    public KitchenObjectScriptableObject GetKitchenObjectScriptable() {
+        return kitchenObjectScriptableObject;
     }
 
     public IKitchenObjectParent GetParent() {
@@ -24,5 +34,10 @@ public class KitchenObject : MonoBehaviour {
         transform.parent = newParent.GetKitchenObjectFollowTransform();
         transform.localPosition = Vector3.zero;
         _parent = newParent;
+    }
+
+    public void DestroySelf() {
+        _parent.ClearKitchenObject();
+        Destroy(gameObject);
     }
 }

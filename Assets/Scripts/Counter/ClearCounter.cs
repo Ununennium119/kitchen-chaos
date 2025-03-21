@@ -1,10 +1,5 @@
-using ScriptableObjects.KitchenObjects;
-using UnityEngine;
-
 namespace Counter {
     public class ClearCounter : BaseCounter {
-        [SerializeField] private KitchenObjectScriptable kitchenObjectScriptable;
-
         public override void Interact(Player player) {
             // Swap player and counter kitchen objects
             var playerKitchenObject = player.GetKitchenObject();
@@ -17,6 +12,10 @@ namespace Counter {
             if (counterKitchenObject != null) {
                 counterKitchenObject.SetParent(player);
             }
+        }
+
+        public override void InteractAlternate() {
+            // Do Nothing
         }
     }
 }

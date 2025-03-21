@@ -43,6 +43,7 @@ public class Player : MonoBehaviour, IKitchenObjectParent {
 
     private void Start() {
         gameInput.OnInteract += OnInteractAction;
+        gameInput.OnInteractAlternate += OnInteractAlternateAction;
     }
 
     private void Update() {
@@ -142,6 +143,7 @@ public class Player : MonoBehaviour, IKitchenObjectParent {
         SetSelectedCounter(counter);
     }
 
+
     private void SetSelectedCounter(BaseCounter counter) {
         _selectedCounter = counter;
         OnSelectedCounterChanged?.Invoke(
@@ -150,7 +152,12 @@ public class Player : MonoBehaviour, IKitchenObjectParent {
         );
     }
 
+
     private void OnInteractAction(object sender, EventArgs e) {
         _selectedCounter?.Interact(this);
+    }
+
+    private void OnInteractAlternateAction(object sender, EventArgs e) {
+        _selectedCounter?.InteractAlternate();
     }
 }
