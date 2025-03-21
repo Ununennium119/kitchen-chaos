@@ -5,5 +5,6 @@ namespace ScriptableObjects {
     public class CuttingRecipeScriptableObject : ScriptableObject {
         public KitchenObjectScriptableObject input;
         public KitchenObjectScriptableObject output;
+        public int totalCuts;
     }
 }
