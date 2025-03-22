@@ -18,6 +18,16 @@ namespace KitchenObject {
         }
 
 
+        public bool TryGetPlateKitchenObject(out PlateKitchenObject kitchenObject) {
+            if (this is PlateKitchenObject plateKitchenObject) {
+                kitchenObject = plateKitchenObject;
+                return true;
+            }
+
+            kitchenObject = null;
+            return false;
+        }
+
         public KitchenObjectSO GetKitchenObjectSO() {
             return kitchenObjectSO;
         }

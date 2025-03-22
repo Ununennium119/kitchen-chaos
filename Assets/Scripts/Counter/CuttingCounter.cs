@@ -19,14 +19,25 @@ namespace Counter {
 
 
         public override void Interact(Player.Player player) {
-            // If player's kitchen object cannot be cut, do nothing
             var playerKitchenObject = player.GetKitchenObject();
+            var counterKitchenObject = GetKitchenObject();
+
+            // If player has a plate and counter is not empty try to add counter kitchen object to the plate
+            if (playerKitchenObject?.TryGetPlateKitchenObject(out var playerPlateKitchenObject) == true) {
+                if (counterKitchenObject != null) {
+                    if (playerPlateKitchenObject.TryAddKitchenObject(counterKitchenObject.GetKitchenObjectSO())) {
+                        counterKitchenObject.DestroySelf();
+                    }
+                    return;
+                }
+            }
+
+            // If player's kitchen object cannot be cut, do nothing
             if (playerKitchenObject != null && !HasRecipe(playerKitchenObject.GetKitchenObjectSO())) {
                 return;
             }
 
             // Swap player and counter kitchen objects
-            var counterKitchenObject = GetKitchenObject();
             playerKitchenObject?.ClearParent();
             counterKitchenObject?.ClearParent();
             if (playerKitchenObject != null) {
@@ -52,7 +63,8 @@ namespace Counter {
             _currentNumberOfCuts += 1;
             OnProgressChanged?.Invoke(
                 this,
-                new IHasProgress.OnProgressChangedArgs { ProgressNormalized = (float)_currentNumberOfCuts / recipeSO.totalCuts }
+                new IHasProgress.OnProgressChangedArgs
+                    { ProgressNormalized = (float)_currentNumberOfCuts / recipeSO.totalCuts }
             );
             OnCut?.Invoke(this, EventArgs.Empty);
             if (_currentNumberOfCuts < recipeSO.totalCuts) return;

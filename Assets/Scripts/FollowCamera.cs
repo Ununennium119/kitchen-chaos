@@ -16,7 +16,7 @@ public class FollowCamera : MonoBehaviour {
     private void Update() {
         var mainCamera = Camera.main;
         if (mainCamera is null) return;
-        Debug.Log("HERE");
+
         switch (mode) {
             case Mode.LookAt:
                 transform.LookAt(mainCamera.transform);

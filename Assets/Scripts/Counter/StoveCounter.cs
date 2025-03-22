@@ -32,15 +32,29 @@ namespace Counter {
 
 
         public override void Interact(Player.Player player) {
-            // If player's kitchen object cannot be fried, do nothing
             var playerKitchenObject = player.GetKitchenObject();
+            var counterKitchenObject = GetKitchenObject();
+
+            // If player has a plate and counter is not empty try to add counter kitchen object to the plate
+            if (playerKitchenObject?.TryGetPlateKitchenObject(out var playerPlateKitchenObject) == true) {
+                if (counterKitchenObject != null) {
+                    if (!playerPlateKitchenObject.TryAddKitchenObject(counterKitchenObject.GetKitchenObjectSO())) {
+                        return;
+                    }
+                    counterKitchenObject.DestroySelf();
+                    ChangeState(State.Idle);
+                    InvokeOnProgressChanged(0f);
+                    return;
+                }
+            }
+
+            // If player's kitchen object cannot be fried, do nothing
             var recipeSO = GetRecipe(playerKitchenObject?.GetKitchenObjectSO());
             if (playerKitchenObject != null && recipeSO == null) {
                 return;
             }
 
             // Swap player and counter kitchen objects
-            var counterKitchenObject = GetKitchenObject();
             playerKitchenObject?.ClearParent();
             counterKitchenObject?.ClearParent();
             if (playerKitchenObject != null) {
