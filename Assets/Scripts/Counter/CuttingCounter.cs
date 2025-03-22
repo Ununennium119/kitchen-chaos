@@ -1,23 +1,21 @@
 using System;
 using System.Linq;
 using ScriptableObjects;
+using UI;
 using UnityEngine;
+using KitchenObject;
 
 namespace Counter {
-    public class CuttingCounter : BaseCounter {
-        public event EventHandler<OnProgressChangedArgs> OnProgressChanged;
-
-        public class OnProgressChangedArgs : EventArgs {
-            public float ProgressNormalized;
-        }
+    public class CuttingCounter : BaseCounter, IHasProgress {
+        public event EventHandler<IHasProgress.OnProgressChangedArgs> OnProgressChanged;
 
         public event EventHandler OnCut;
 
 
-        [SerializeField] private CuttingRecipeSO[] cuttingRecipes;
+        [SerializeField] private CuttingRecipeSO[] cuttingRecipeSOArray;
 
 
-        private int _currentNumberOfCuts = 0;
+        private int _currentNumberOfCuts;
 
 
         public override void Interact(Player.Player player) {
@@ -42,39 +40,35 @@ namespace Counter {
             _currentNumberOfCuts = 0;
             OnProgressChanged?.Invoke(
                 this,
-                new OnProgressChangedArgs { ProgressNormalized = _currentNumberOfCuts }
+                new IHasProgress.OnProgressChangedArgs { ProgressNormalized = _currentNumberOfCuts }
             );
         }
 
         public override void InteractAlternate() {
-            var recipe = GetRecipe(GetKitchenObject()?.GetKitchenObjectSO());
-            if (recipe == null) return;
+            var recipeSO = GetRecipe(GetKitchenObject()?.GetKitchenObjectSO());
+            if (recipeSO == null) return;
 
             // Increment number of cuts
             _currentNumberOfCuts += 1;
             OnProgressChanged?.Invoke(
                 this,
-                new OnProgressChangedArgs { ProgressNormalized = (float)_currentNumberOfCuts / recipe.totalCuts }
+                new IHasProgress.OnProgressChangedArgs { ProgressNormalized = (float)_currentNumberOfCuts / recipeSO.totalCuts }
             );
             OnCut?.Invoke(this, EventArgs.Empty);
-            if (_currentNumberOfCuts < recipe.totalCuts) return;
+            if (_currentNumberOfCuts < recipeSO.totalCuts) return;
 
             // Cutting is completed
             GetKitchenObject().DestroySelf();
-            KitchenObject.KitchenObject.SpawnKitchenObject(recipe.output, this);
+            KitchenObject.KitchenObject.SpawnKitchenObject(recipeSO.output, this);
         }
 
 
-        private CuttingRecipeSO GetRecipe(KitchenObjectSO kitchenObject) {
-            return cuttingRecipes.FirstOrDefault(cuttingRecipe => cuttingRecipe.input == kitchenObject);
+        private CuttingRecipeSO GetRecipe(KitchenObjectSO kitchenObjectSO) {
+            return cuttingRecipeSOArray.FirstOrDefault(cuttingRecipe => cuttingRecipe.input == kitchenObjectSO);
         }
 
-        private KitchenObjectSO GetOutput(KitchenObjectSO kitchenObject) {
-            return GetRecipe(kitchenObject)?.output;
-        }
-
-        private bool HasRecipe(KitchenObjectSO kitchenObject) {
-            return GetOutput(kitchenObject) != null;
+        private bool HasRecipe(KitchenObjectSO kitchenObjectSO) {
+            return GetRecipe(kitchenObjectSO) != null;
         }
     }
 }
