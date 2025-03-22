@@ -18,6 +18,11 @@ namespace KitchenObject {
         private List<KitchenObjectSO> _kitchenObjectSOList;
 
 
+        public List<KitchenObjectSO> GetKitchenObjectSOList() {
+            return _kitchenObjectSOList;
+        }
+
+
         private void Start() {
             _kitchenObjectSOList = new List<KitchenObjectSO>();
         }

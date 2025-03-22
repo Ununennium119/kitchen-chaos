@@ -20,7 +20,6 @@ namespace UI {
             foreach (var kitchenObjectSO in e.KitchenObjectSOArray) {
                 var iconTransform = Instantiate(iconTemplate, transform);
                 iconTransform.gameObject.SetActive(true);
-                Debug.Log(iconTransform.GetComponent<PlateSingleIconUI>());
                 iconTransform.GetComponent<PlateSingleIconUI>().SetKitchenObjectSO(kitchenObjectSO);
             }
         }
