@@ -10,8 +10,10 @@ public class DeliveryManager : MonoBehaviour {
     public static DeliveryManager Instance { get; private set; }
 
 
-    public event EventHandler<EventArgs> OnOrderSpawned; 
-    public event EventHandler<EventArgs> OnOrderDeSpawned; 
+    public event EventHandler OnOrderSpawned; 
+    public event EventHandler OnOrderDeSpawned; 
+    public event EventHandler OnDeliverySuccess; 
+    public event EventHandler OnDeliveryFail; 
 
 
     [SerializeField] private OrderRecipeListSO orderRecipeListSO;
@@ -38,10 +40,14 @@ public class DeliveryManager : MonoBehaviour {
             deliveredWaitingOrderRecipeSO = waitingOrderRecipeSO;
             break;
         }
-        if (deliveredWaitingOrderRecipeSO == null) return false;
+        if (deliveredWaitingOrderRecipeSO == null) {
+            OnDeliveryFail?.Invoke(this, EventArgs.Empty);
+            return false;
+        }
 
         _waitingOrderRecipeSOList.Remove(deliveredWaitingOrderRecipeSO);
         OnOrderDeSpawned?.Invoke(this, EventArgs.Empty);
+        OnDeliverySuccess?.Invoke(this, EventArgs.Empty);
         return true;
     }
 

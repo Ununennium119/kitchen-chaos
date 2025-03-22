@@ -14,6 +14,9 @@ namespace Player {
             public BaseCounter SelectedCounter;
         }
 
+        public event EventHandler OnObjectPickup;
+        public event EventHandler OnObjectDrop;
+
 
         [Header("Player Stats")]
         [SerializeField] private float velocity = 7.5f;
@@ -49,15 +52,21 @@ namespace Player {
         }
 
         public void SetKitchenObject(KitchenObject.KitchenObject kitchenObject) {
+            if (kitchenObject is not null) {
+                OnObjectPickup?.Invoke(this, EventArgs.Empty);
+            }
             _kitchenObject = kitchenObject;
         }
 
         public void ClearKitchenObject() {
+            if (_kitchenObject is not null) {
+                OnObjectDrop?.Invoke(this, EventArgs.Empty);
+            }
             _kitchenObject = null;
         }
 
         public bool HasKitchenObject() {
-            return _kitchenObject != null;
+            return _kitchenObject is not null;
         }
 
 

@@ -7,6 +7,9 @@ using KitchenObject;
 
 namespace Counter {
     public class CuttingCounter : BaseCounter, IHasProgress {
+        public static event EventHandler OnAnyCut;
+
+
         public event EventHandler<IHasProgress.OnProgressChangedArgs> OnProgressChanged;
 
         public event EventHandler OnCut;
@@ -67,6 +70,7 @@ namespace Counter {
                     { ProgressNormalized = (float)_currentNumberOfCuts / recipeSO.totalCuts }
             );
             OnCut?.Invoke(this, EventArgs.Empty);
+            OnAnyCut?.Invoke(this, EventArgs.Empty);
             if (_currentNumberOfCuts < recipeSO.totalCuts) return;
 
             // Cutting is completed

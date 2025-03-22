@@ -1,9 +1,15 @@
+using System;
+
 namespace Counter {
     public class TrashCounter : BaseCounter {
+        public static event EventHandler OnTrash;
+
+
         public override void Interact(Player.Player player) {
-            if (player.HasKitchenObject()) {
-                player.GetKitchenObject().DestroySelf();
-            }
+            if (!player.HasKitchenObject()) return;
+
+            player.GetKitchenObject().DestroySelf();
+            OnTrash?.Invoke(this, null);
         }
 
         public override void InteractAlternate() {
