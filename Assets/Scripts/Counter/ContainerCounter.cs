@@ -1,19 +1,18 @@
 using System;
 using ScriptableObjects;
 using UnityEngine;
-using UnityEngine.Serialization;
 
 namespace Counter {
     public class ContainerCounter : BaseCounter {
         public event EventHandler OnContainerOpened;
 
 
-        [SerializeField] private KitchenObjectScriptableObject kitchenObjectScriptableObject;
+        [SerializeField] private KitchenObjectSO kitchenObjectSO;
 
-        public override void Interact(Player player) {
+        public override void Interact(Player.Player player) {
             if (player.HasKitchenObject()) return;
 
-            KitchenObject.SpawnKitchenObject(kitchenObjectScriptableObject, player);
+            KitchenObject.KitchenObject.SpawnKitchenObject(kitchenObjectSO, player);
 
             OnContainerOpened?.Invoke(this, EventArgs.Empty);
         }

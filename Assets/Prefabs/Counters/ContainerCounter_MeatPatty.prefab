@@ -13,6 +13,10 @@ PrefabInstance:
       value: ContainerCounter_MeatPatty
       objectReference: {fileID: 0}
     - target: {fileID: 6101430418171225452, guid: 04749b981e6ec6741a6c29d191eb95e2, type: 3}
+      propertyPath: kitchenObjectSO
+      value: 
+      objectReference: {fileID: 11400000, guid: 41fd4a180030aa348b5a7d0e26b0dff2, type: 2}
+    - target: {fileID: 6101430418171225452, guid: 04749b981e6ec6741a6c29d191eb95e2, type: 3}
       propertyPath: kitchenObjectScriptable
       value: 
       objectReference: {fileID: 11400000, guid: 41fd4a180030aa348b5a7d0e26b0dff2, type: 2}

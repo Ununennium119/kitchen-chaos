@@ -1,11 +1,11 @@
 namespace Counter {
     public class ClearCounter : BaseCounter {
-        public override void Interact(Player player) {
+        public override void Interact(Player.Player player) {
             // Swap player and counter kitchen objects
             var playerKitchenObject = player.GetKitchenObject();
             var counterKitchenObject = GetKitchenObject();
-            player.ClearKitchenObject();
-            ClearKitchenObject();
+            playerKitchenObject?.ClearParent();
+            counterKitchenObject?.ClearParent();
             if (playerKitchenObject != null) {
                 playerKitchenObject.SetParent(this);
             }

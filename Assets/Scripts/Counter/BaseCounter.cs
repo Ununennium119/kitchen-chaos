@@ -1,14 +1,15 @@
 ﻿using System;
+using KitchenObject;
 using UnityEngine;
 
 namespace Counter {
     public class BaseCounter : MonoBehaviour, IKitchenObjectParent {
         [SerializeField] private Transform counterTopPoint;
 
-        private KitchenObject _kitchenObject;
+        private KitchenObject.KitchenObject _kitchenObject;
 
 
-        public virtual void Interact(Player player) {
+        public virtual void Interact(Player.Player player) {
             throw new NotImplementedException("BaseCounter.Interact is not implemented!");
         }
         
@@ -21,11 +22,11 @@ namespace Counter {
             return counterTopPoint;
         }
 
-        public KitchenObject GetKitchenObject() {
+        public KitchenObject.KitchenObject GetKitchenObject() {
             return _kitchenObject;
         }
 
-        public void SetKitchenObject(KitchenObject kitchenObject) {
+        public void SetKitchenObject(KitchenObject.KitchenObject kitchenObject) {
             _kitchenObject = kitchenObject;
         }
 

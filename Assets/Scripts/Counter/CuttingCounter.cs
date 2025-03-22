@@ -14,23 +14,23 @@ namespace Counter {
         public event EventHandler OnCut;
 
 
-        [SerializeField] private CuttingRecipeScriptableObject[] cuttingRecipes;
+        [SerializeField] private CuttingRecipeSO[] cuttingRecipes;
 
 
         private int _currentNumberOfCuts = 0;
 
 
-        public override void Interact(Player player) {
+        public override void Interact(Player.Player player) {
             // If player's kitchen object cannot be cut, do nothing
             var playerKitchenObject = player.GetKitchenObject();
-            if (playerKitchenObject != null && !HasRecipe(playerKitchenObject.GetKitchenObjectScriptable())) {
+            if (playerKitchenObject != null && !HasRecipe(playerKitchenObject.GetKitchenObjectSO())) {
                 return;
             }
 
             // Swap player and counter kitchen objects
             var counterKitchenObject = GetKitchenObject();
-            player.ClearKitchenObject();
-            ClearKitchenObject();
+            playerKitchenObject?.ClearParent();
+            counterKitchenObject?.ClearParent();
             if (playerKitchenObject != null) {
                 playerKitchenObject.SetParent(this);
             }
@@ -47,7 +47,7 @@ namespace Counter {
         }
 
         public override void InteractAlternate() {
-            var recipe = GetRecipe(GetKitchenObject()?.GetKitchenObjectScriptable());
+            var recipe = GetRecipe(GetKitchenObject()?.GetKitchenObjectSO());
             if (recipe == null) return;
 
             // Increment number of cuts
@@ -61,19 +61,19 @@ namespace Counter {
 
             // Cutting is completed
             GetKitchenObject().DestroySelf();
-            KitchenObject.SpawnKitchenObject(recipe.output, this);
+            KitchenObject.KitchenObject.SpawnKitchenObject(recipe.output, this);
         }
 
 
-        private CuttingRecipeScriptableObject GetRecipe(KitchenObjectScriptableObject kitchenObject) {
+        private CuttingRecipeSO GetRecipe(KitchenObjectSO kitchenObject) {
             return cuttingRecipes.FirstOrDefault(cuttingRecipe => cuttingRecipe.input == kitchenObject);
         }
 
-        private KitchenObjectScriptableObject GetOutput(KitchenObjectScriptableObject kitchenObject) {
+        private KitchenObjectSO GetOutput(KitchenObjectSO kitchenObject) {
             return GetRecipe(kitchenObject)?.output;
         }
 
-        private bool HasRecipe(KitchenObjectScriptableObject kitchenObject) {
+        private bool HasRecipe(KitchenObjectSO kitchenObject) {
             return GetOutput(kitchenObject) != null;
         }
     }

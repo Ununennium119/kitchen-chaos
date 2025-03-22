@@ -9,16 +9,17 @@ public class GameInput : MonoBehaviour {
     private InputSystemActions _inputSystemActions;
 
 
+    public Vector2 GetPlayerMovementVectorNormalized() {
+        return _inputSystemActions.Player.Move.ReadValue<Vector2>();
+    }
+
+
     private void Awake() {
         _inputSystemActions = new InputSystemActions();
         _inputSystemActions.Enable();
 
         _inputSystemActions.Player.Interact.performed += InteractPerformed;
         _inputSystemActions.Player.InteractAlternate.performed += InteractAlternatePerformed;
-    }
-
-    public Vector2 GetPlayerMovementVectorNormalized() {
-        return _inputSystemActions.Player.Move.ReadValue<Vector2>();
     }
 
 
