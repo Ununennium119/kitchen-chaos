@@ -1,4 +1,5 @@
-﻿using Counter;
+﻿using System;
+using Counter;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -7,6 +8,10 @@ namespace UI {
         [SerializeField] private Image progressBarImage;
         [SerializeField] private CuttingCounter cuttingCounter;
 
+
+        private void Awake() {
+            gameObject.SetActive(true);
+        }
 
         private void Start() {
             cuttingCounter.OnProgressChanged += OnProgressChangedAction;
@@ -18,11 +23,7 @@ namespace UI {
 
         private void OnProgressChangedAction(object sender, CuttingCounter.OnProgressChangedArgs e) {
             progressBarImage.fillAmount = e.ProgressNormalized;
-            gameObject.SetActive(true);
-
-            if (e.ProgressNormalized is 0 or 1f) {
-                gameObject.SetActive(false);
-            }
+            gameObject.SetActive(e.ProgressNormalized is not (0 or 1f));
         }
     }
 }
