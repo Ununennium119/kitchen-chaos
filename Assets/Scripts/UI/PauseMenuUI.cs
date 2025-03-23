@@ -14,7 +14,10 @@ namespace UI {
 
         private void Awake() {
             resumeButton.onClick.AddListener(() => { _gameManager.ToggleGamePause(); });
-            optionsButton.onClick.AddListener(() => { _optionsMenuUI.Show(); });
+            optionsButton.onClick.AddListener(() => {
+                _optionsMenuUI.Show(Show);
+                gameObject.SetActive(false);
+            });
             mainMenuButton.onClick.AddListener(() => { SceneLoader.LoadScene(SceneLoader.Scene.MainMenuScene); });
         }
 
@@ -29,7 +32,20 @@ namespace UI {
 
 
         private void OnPauseToggledAction(object sender, GameManager.OnPauseToggledArgs e) {
-            gameObject.SetActive(e.IsGamePaused);
+            if (e.IsGamePaused) {
+                Show();
+            } else {
+                Hide();
+            }
+        }
+
+        private void Show() {
+            gameObject.SetActive(true);
+            resumeButton.Select();
+        }
+
+        private void Hide() {
+            gameObject.SetActive(false);
         }
     }
 }

@@ -32,6 +32,7 @@ namespace UI {
         private void OnStateChangedAction(object sender, GameManager.OnStateChangedArgs e) {
             var isActive = e.State == GameManager.State.GameOver;
             gameObject.SetActive(isActive);
+            mainMenuButton.Select();
         }
     }
 }

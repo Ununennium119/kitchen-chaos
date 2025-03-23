@@ -11,6 +11,9 @@ public class GameInput : MonoBehaviour {
         Interact,
         AlternativeInteract,
         Pause,
+        GamepadInteract,
+        GamepadAlternativeInteract,
+        GamepadPause,
     }
     
     private const string PLAYER_PREFS_BINDINGS = "BINDINGS";
@@ -39,6 +42,9 @@ public class GameInput : MonoBehaviour {
             Binding.Interact => _inputSystemActions.Player.Interact.bindings[0].ToDisplayString(),
             Binding.AlternativeInteract => _inputSystemActions.Player.InteractAlternate.bindings[0].ToDisplayString(),
             Binding.Pause => _inputSystemActions.Player.Pause.bindings[0].ToDisplayString(),
+            Binding.GamepadInteract => _inputSystemActions.Player.Interact.bindings[1].ToDisplayString(),
+            Binding.GamepadAlternativeInteract => _inputSystemActions.Player.InteractAlternate.bindings[1].ToDisplayString(),
+            Binding.GamepadPause => _inputSystemActions.Player.Pause.bindings[1].ToDisplayString(),
             _ => throw new ArgumentOutOfRangeException(nameof(binding), binding, null)
         };
         return bindingString;
@@ -75,6 +81,18 @@ public class GameInput : MonoBehaviour {
             case Binding.Pause:
                 inputAction = _inputSystemActions.Player.Pause;
                 bindingIndex = 0;
+                break;
+            case Binding.GamepadInteract:
+                inputAction = _inputSystemActions.Player.Interact;
+                bindingIndex = 1;
+                break;
+            case Binding.GamepadAlternativeInteract:
+                inputAction = _inputSystemActions.Player.InteractAlternate;
+                bindingIndex = 1;
+                break;
+            case Binding.GamepadPause:
+                inputAction = _inputSystemActions.Player.Pause;
+                bindingIndex = 1;
                 break;
             default:
                 throw new ArgumentOutOfRangeException(nameof(binding), binding, null);

@@ -16,6 +16,7 @@ namespace UI {
             CuttingCounter.ResetStaticObjects();
 
             Time.timeScale = 1f;
+            playButton.Select();
         }
     }
 }

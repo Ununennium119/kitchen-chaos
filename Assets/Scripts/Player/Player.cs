@@ -106,13 +106,13 @@ namespace Player {
                 // Cannot move towards movement direction
                 // Test movement on the x-axis
                 var xMovementDirection = new Vector3(movementDirection.x, 0, 0).normalized;
-                if (CanMove(xMovementDirection)) {
+                if (movementDirection.x is > 0.5f or < -0.5f && CanMove(xMovementDirection)) {
                     // Can only move on the x-axis
                     movementDirection = xMovementDirection;
                 } else {
                     // Test movement on the z-axis
                     var zMovementDirection = new Vector3(0, 0, movementDirection.z).normalized;
-                    if (CanMove(zMovementDirection)) {
+                    if (movementDirection.z is < -0.5f or > 0.5f && CanMove(zMovementDirection)) {
                         // Can only move on the z-axis
                         movementDirection = zMovementDirection;
                     } else {
