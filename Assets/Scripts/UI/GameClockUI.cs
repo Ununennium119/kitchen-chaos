@@ -15,7 +15,6 @@ namespace UI {
             _gameManager = GameManager.Instance;
 
             _gameManager.OnStateChanged += OnStateChangedAction;
-            gameObject.SetActive(false);
         }
 
         private void Update() {

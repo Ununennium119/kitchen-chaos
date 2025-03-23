@@ -24,8 +24,6 @@ namespace UI {
             _deliveryManager.OnOrderSpawned += OnOrderSpawnedAction;
             _deliveryManager.OnOrderDeSpawned += OnOrderDeSpawnedAction;
             _gameManager.OnStateChanged += OnStateChangedAction;
-            
-            gameObject.SetActive(false);
         }
 
 
