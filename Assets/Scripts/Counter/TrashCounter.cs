@@ -5,6 +5,11 @@ namespace Counter {
         public static event EventHandler OnTrash;
 
 
+        public static void ResetStaticObjects() {
+            OnTrash = null;
+        }
+
+
         public override void Interact(Player.Player player) {
             if (!player.HasKitchenObject()) return;
 

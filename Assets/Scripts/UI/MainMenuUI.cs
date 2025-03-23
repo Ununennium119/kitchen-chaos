@@ -1,4 +1,5 @@
-﻿using UnityEngine;
+﻿using Counter;
+using UnityEngine;
 using UnityEngine.UI;
 
 namespace UI {
@@ -10,6 +11,11 @@ namespace UI {
         private void Awake() {
             playButton.onClick.AddListener(() => { SceneLoader.LoadScene(SceneLoader.Scene.GameScene); });
             quitButton.onClick.AddListener(Application.Quit);
+
+            TrashCounter.ResetStaticObjects();
+            CuttingCounter.ResetStaticObjects();
+
+            Time.timeScale = 1f;
         }
     }
 }

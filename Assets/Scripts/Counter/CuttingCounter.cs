@@ -10,6 +10,11 @@ namespace Counter {
         public static event EventHandler OnAnyCut;
 
 
+        public static void ResetStaticObjects() {
+            OnAnyCut = null;
+        }
+
+
         public event EventHandler<IHasProgress.OnProgressChangedArgs> OnProgressChanged;
 
         public event EventHandler OnCut;

@@ -1,14 +1,20 @@
 ﻿using TMPro;
 using UnityEngine;
+using UnityEngine.UI;
 
 namespace UI {
     public class GameOverUI : MonoBehaviour {
         [SerializeField] private TextMeshProUGUI recipesDeliveredCountText;
+        [SerializeField] private Button mainMenuButton;
 
 
         private GameManager _gameManager;
         private DeliveryManager _deliveryManager;
 
+
+        private void Awake() {
+            mainMenuButton.onClick.AddListener(() => SceneLoader.LoadScene(SceneLoader.Scene.MainMenuScene));
+        }
 
         private void Start() {
             _gameManager = GameManager.Instance;
