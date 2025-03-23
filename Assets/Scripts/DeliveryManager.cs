@@ -23,6 +23,7 @@ public class DeliveryManager : MonoBehaviour {
 
     private List<OrderRecipeSO> _waitingOrderRecipeSOList;
     private float _orderRecipeSpawnTimer;
+    private int _deliveredRecipesCount;
 
 
     public bool DeliverPlate(PlateKitchenObject plateKitchenObject) {
@@ -48,11 +49,16 @@ public class DeliveryManager : MonoBehaviour {
         _waitingOrderRecipeSOList.Remove(deliveredWaitingOrderRecipeSO);
         OnOrderDeSpawned?.Invoke(this, EventArgs.Empty);
         OnDeliverySuccess?.Invoke(this, EventArgs.Empty);
+        _deliveredRecipesCount += 1;
         return true;
     }
 
     public List<OrderRecipeSO> GetWaitingOrderRecipeSOList() {
         return _waitingOrderRecipeSOList;
+    }
+
+    public int GetDeliveredRecipesCount() {
+        return _deliveredRecipesCount;
     }
 
 
@@ -64,6 +70,7 @@ public class DeliveryManager : MonoBehaviour {
 
         _waitingOrderRecipeSOList = new List<OrderRecipeSO>();
         _orderRecipeSpawnTimer = maxOrderRecipeSpawnTimer;
+        _deliveredRecipesCount = 0;
     }
 
     private void Update() {

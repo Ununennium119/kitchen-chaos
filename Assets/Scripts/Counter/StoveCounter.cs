@@ -83,6 +83,10 @@ namespace Counter {
             }
         }
 
+        public override void InteractAlternate() {
+            // Do Nothing
+        }
+
 
         private void Update() {
             if (_currentFryingRecipeSO is null) return;

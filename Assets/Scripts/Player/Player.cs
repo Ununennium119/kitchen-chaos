@@ -33,6 +33,7 @@ namespace Player {
         [SerializeField] private Transform holdPoint;
 
 
+        private GameManager _gameManager;
         private bool _isWalking;
         private BaseCounter _selectedCounter;
         private KitchenObject.KitchenObject _kitchenObject;
@@ -79,6 +80,8 @@ namespace Player {
         }
 
         private void Start() {
+            _gameManager = GameManager.Instance;
+
             gameInput.OnInteract += OnInteractAction;
             gameInput.OnInteractAlternate += OnInteractAlternateAction;
         }
@@ -165,10 +168,14 @@ namespace Player {
 
 
         private void OnInteractAction(object sender, EventArgs e) {
+            if (!_gameManager.IsPlaying()) return;
+
             _selectedCounter?.Interact(this);
         }
 
         private void OnInteractAlternateAction(object sender, EventArgs e) {
+            if (!_gameManager.IsPlaying()) return;
+
             _selectedCounter?.InteractAlternate();
         }
     }

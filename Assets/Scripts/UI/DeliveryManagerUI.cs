@@ -1,11 +1,14 @@
-﻿using UnityEngine;
+﻿using System.Linq;
+using UnityEngine;
 
 namespace UI {
     public class DeliveryManagerUI : MonoBehaviour {
         [SerializeField] private Transform orderContainer;
         [SerializeField] private Transform orderTemplate;
+        
 
-
+        private readonly GameManager.State[] _activeStates = { GameManager.State.Playing, GameManager.State.Countdown };
+        private GameManager _gameManager;
         private DeliveryManager _deliveryManager;
 
 
@@ -16,9 +19,13 @@ namespace UI {
 
         private void Start() {
             _deliveryManager = DeliveryManager.Instance;
+            _gameManager = GameManager.Instance;
 
             _deliveryManager.OnOrderSpawned += OnOrderSpawnedAction;
             _deliveryManager.OnOrderDeSpawned += OnOrderDeSpawnedAction;
+            _gameManager.OnStateChanged += OnStateChangedAction;
+            
+            gameObject.SetActive(false);
         }
 
 
@@ -53,6 +60,12 @@ namespace UI {
                 // ReSharper disable once Unity.PerformanceCriticalCodeInvocation
                 orderUI.SetRecipeSO(waitingOrder);
             }
+        }
+
+
+        private void OnStateChangedAction(object sender, GameManager.OnStateChangedArgs e) {
+            var isActive = _activeStates.Contains(e.State);
+            gameObject.SetActive(isActive);
         }
     }
 }
