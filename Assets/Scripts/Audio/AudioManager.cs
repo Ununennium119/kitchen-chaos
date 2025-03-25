@@ -38,6 +38,10 @@ namespace Audio {
             PlaySound(audioClipsSO.footstepAudioClips, position, volume);
         }
 
+        public void PlayWarningAudioClip(Vector3 position, float volume = 1f) {
+            PlaySound(audioClipsSO.warningAudioClips, position, volume);
+        }
+
 
         private void Awake() {
             if (Instance != null) {

@@ -24,14 +24,12 @@ public class GameManager : MonoBehaviour {
     }
 
 
-    [SerializeField] private float maxWaitTime = 1f;
     [SerializeField] private float maxCountdownTime = 3f;
     [SerializeField] private float maxPlayTime = 10f;
 
 
     private GameInput _gameInput;
     private State _state;
-    private float _currentWaitTime;
     private float _currentCountdownTime;
     private float _currentPlayTime;
     private bool _isGamePaused;
@@ -68,8 +66,7 @@ public class GameManager : MonoBehaviour {
         }
         Instance = this;
 
-        ChangeState(State.WaitingToStart);
-        _currentWaitTime = maxWaitTime;
+        _state = State.WaitingToStart;
         _currentCountdownTime = maxCountdownTime;
         _currentPlayTime = maxPlayTime;
         _isGamePaused = false;
@@ -79,16 +76,13 @@ public class GameManager : MonoBehaviour {
         _gameInput = GameInput.Instance;
 
         _gameInput.OnPause += OnPausePerformedAction;
+        _gameInput.OnInteract += OnInteractPerformedAction;
     }
 
     private void Update() {
         switch (_state) {
             case State.WaitingToStart:
-                _currentWaitTime -= Time.deltaTime;
-                if (_currentWaitTime <= 0) {
-                    ChangeState(State.Countdown);
-                    _currentCountdownTime = maxCountdownTime;
-                }
+                // Do Nothing
                 break;
             case State.Countdown:
                 _currentCountdownTime -= Time.deltaTime;
@@ -119,5 +113,11 @@ public class GameManager : MonoBehaviour {
 
     private void OnPausePerformedAction(object sender, EventArgs e) {
         ToggleGamePause();
+    }
+
+    private void OnInteractPerformedAction(object sender, EventArgs e) {
+        if (_state == State.WaitingToStart && !_isGamePaused) {
+            ChangeState(State.Countdown);
+        }
     }
 }

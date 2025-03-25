@@ -21,9 +21,11 @@ public class DeliveryManager : MonoBehaviour {
     [SerializeField] private int maxOrderRecipesCount;
 
 
+    private GameManager _gameManager;
     private List<OrderRecipeSO> _waitingOrderRecipeSOList;
     private float _orderRecipeSpawnTimer;
     private int _deliveredRecipesCount;
+    private bool _isDeliveryActive;
 
 
     public bool DeliverPlate(PlateKitchenObject plateKitchenObject) {
@@ -73,7 +75,14 @@ public class DeliveryManager : MonoBehaviour {
         _deliveredRecipesCount = 0;
     }
 
+    private void Start() {
+        _gameManager = GameManager.Instance;
+
+        _gameManager.OnStateChanged += OnStateChangedAction;
+    }
+
     private void Update() {
+        if (!_isDeliveryActive) return;
         if (_waitingOrderRecipeSOList.Count >= maxOrderRecipesCount) return;
 
         _orderRecipeSpawnTimer -= Time.deltaTime;
@@ -86,5 +95,10 @@ public class DeliveryManager : MonoBehaviour {
         // ReSharper disable once Unity.PerformanceCriticalCodeInvocation
         // The order spawned event is triggered in a specific condition so it doesn't affect performance
         OnOrderSpawned?.Invoke(this, EventArgs.Empty);
+    }
+
+
+    private void OnStateChangedAction(object sender, GameManager.OnStateChangedArgs e) {
+        _isDeliveryActive = e.State == GameManager.State.Playing;
     }
 }

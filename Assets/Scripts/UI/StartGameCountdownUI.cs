@@ -4,11 +4,16 @@ using UnityEngine;
 
 namespace UI {
     public class StartGameCountdownUI : MonoBehaviour {
+        private static readonly int PopUpTrigger = Animator.StringToHash("PopUp");
+
+
         [SerializeField] private Color[] colors;
         [SerializeField] private TextMeshProUGUI countdownText;
+        [SerializeField] private Animator countdownAnimator;
 
 
         private GameManager _gameManager;
+        private int _previousNumber;
 
 
         private static int PositiveMod(int a, int b) {
@@ -16,6 +21,10 @@ namespace UI {
             return remainder < 0 ? remainder + Math.Abs(b) : remainder;
         }
 
+
+        private void Awake() {
+            _previousNumber = 0;
+        }
 
         private void Start() {
             _gameManager = GameManager.Instance;
@@ -26,6 +35,10 @@ namespace UI {
 
         private void Update() {
             var countdownCeil = GetCountdownCeil();
+            if (countdownCeil != _previousNumber) {
+                _previousNumber = countdownCeil;
+                countdownAnimator.SetTrigger(PopUpTrigger);
+            }
             countdownText.text = countdownCeil.ToString();
             var color = colors[PositiveMod(countdownCeil - 1, colors.Length)];
             countdownText.color = new Color(color.r, color.g, color.b, 1f);
