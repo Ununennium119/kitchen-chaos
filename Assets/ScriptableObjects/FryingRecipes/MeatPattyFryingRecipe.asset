@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: MeatPattyFryingRecipe
   m_EditorClassIdentifier: 
   rawKitchenObjectSO: {fileID: 11400000, guid: 41fd4a180030aa348b5a7d0e26b0dff2, type: 2}
-  fryingTime: 3
+  fryingTime: 4
   friedKitchenObjectSO: {fileID: 11400000, guid: f757ea766f9fe0f46b97b5144bf3aa2d, type: 2}
-  burningTime: 5
+  burningTime: 6
   burnedKitchenObjectSO: {fileID: 11400000, guid: f1c352681360db341a7fed8847d3217c, type: 2}
