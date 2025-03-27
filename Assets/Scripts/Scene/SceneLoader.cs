@@ -1,10 +1,13 @@
 ﻿using UnityEngine.SceneManagement;
 
+/// <summary>
+/// This class is responsible for loading scenes.
+/// </summary>
 public static class SceneLoader {
     public enum Scene {
         MainMenuScene,
         LoadingScene,
-        GameScene,
+        GameScene
     }
 
 

@@ -3,32 +3,33 @@ using UnityEngine;
 
 namespace Player {
     public class PlayerSounds : MonoBehaviour {
-        [SerializeField] private float footstepTimerMax = 0.5f;
-        [SerializeField] private float footstepVolume = 1f;
+        [SerializeField, Tooltip("The duration between player walking sound effect")]
+        private float footstepSoundCooldown = 0.5f;
+        [SerializeField, Tooltip("Volume of the footstep sound")]
+        private float footstepSoundVolume = 1f;
 
 
-        private AudioManager _audioManager;
-        private Player _player;
-        private float _footstepTimer;
+        private SoundEffectManager _soundEffectManager;
+        private PlayerController _playerController;
+        private float _footstepSoundTime;
 
 
         private void Awake() {
-            _player = GetComponent<Player>();
-
-            _footstepTimer = footstepTimerMax;
+            _footstepSoundTime = footstepSoundCooldown;
         }
 
         private void Start() {
-            _audioManager = AudioManager.Instance;
+            _soundEffectManager = SoundEffectManager.Instance;
+            _playerController = PlayerController.Instance;
         }
 
         private void Update() {
-            _footstepTimer -= Time.deltaTime;
-            if (_footstepTimer > 0f) return;
+            _footstepSoundTime -= Time.deltaTime;
+            if (_footstepSoundTime > 0f) return;
 
-            _footstepTimer = footstepTimerMax;
-            if (_player.IsWalking()) {
-                _audioManager.PlayFootstepSound(_player.transform.position, footstepVolume);
+            _footstepSoundTime = footstepSoundCooldown;
+            if (_playerController.IsWalking()) {
+                _soundEffectManager.PlayFootstepSound(_playerController.transform.position, footstepSoundVolume);
             }
         }
     }

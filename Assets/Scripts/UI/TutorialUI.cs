@@ -1,4 +1,5 @@
 ﻿using System;
+using Manager;
 using TMPro;
 using UnityEngine;
 
@@ -17,15 +18,15 @@ namespace UI {
 
 
         private GameManager _gameManager;
-        private GameInput _gameInput;
+        private InputManager _inputManager;
 
 
         private void Start() {
             _gameManager = GameManager.Instance;
-            _gameInput = GameInput.Instance;
+            _inputManager = InputManager.Instance;
 
-            _gameManager.OnStateChanged += OnStateChangedAction;
-            _gameInput.OnRebind += OnRebindAction;
+            _gameManager.OnStateChanged += OnGameStateChangedAction;
+            _inputManager.OnRebind += OnRebindAction;
 
             UpdateInputTexts();
         }
@@ -40,22 +41,22 @@ namespace UI {
         }
 
         private void UpdateInputTexts() {
-            keyboardMoveUpText.text = _gameInput.GetPlayerBindingDisplayString(GameInput.Binding.MoveUp);
-            keyboardMoveLeftText.text = _gameInput.GetPlayerBindingDisplayString(GameInput.Binding.MoveLeft);
-            keyboardMoveDownText.text = _gameInput.GetPlayerBindingDisplayString(GameInput.Binding.MoveDown);
-            keyboardMoveRightText.text = _gameInput.GetPlayerBindingDisplayString(GameInput.Binding.MoveUp);
-            keyboardInteractText.text = _gameInput.GetPlayerBindingDisplayString(GameInput.Binding.Interact);
+            keyboardMoveUpText.text = _inputManager.GetPlayerBindingDisplayString(InputManager.Binding.MoveUp);
+            keyboardMoveLeftText.text = _inputManager.GetPlayerBindingDisplayString(InputManager.Binding.MoveLeft);
+            keyboardMoveDownText.text = _inputManager.GetPlayerBindingDisplayString(InputManager.Binding.MoveDown);
+            keyboardMoveRightText.text = _inputManager.GetPlayerBindingDisplayString(InputManager.Binding.MoveUp);
+            keyboardInteractText.text = _inputManager.GetPlayerBindingDisplayString(InputManager.Binding.Interact);
             keyboardAlternativeInteractText.text =
-                _gameInput.GetPlayerBindingDisplayString(GameInput.Binding.AlternativeInteract);
-            keyboardPauseText.text = _gameInput.GetPlayerBindingDisplayString(GameInput.Binding.Pause);
-            gamepadInteractText.text = _gameInput.GetPlayerBindingDisplayString(GameInput.Binding.GamepadInteract);
+                _inputManager.GetPlayerBindingDisplayString(InputManager.Binding.AlternativeInteract);
+            keyboardPauseText.text = _inputManager.GetPlayerBindingDisplayString(InputManager.Binding.Pause);
+            gamepadInteractText.text = _inputManager.GetPlayerBindingDisplayString(InputManager.Binding.GamepadInteract);
             gamepadAlternativeInteractText.text =
-                _gameInput.GetPlayerBindingDisplayString(GameInput.Binding.GamepadAlternativeInteract);
-            gamepadPauseText.text = _gameInput.GetPlayerBindingDisplayString(GameInput.Binding.GamepadPause);
+                _inputManager.GetPlayerBindingDisplayString(InputManager.Binding.GamepadAlternativeInteract);
+            gamepadPauseText.text = _inputManager.GetPlayerBindingDisplayString(InputManager.Binding.GamepadPause);
         }
 
 
-        private void OnStateChangedAction(object sender, GameManager.OnStateChangedArgs e) {
+        private void OnGameStateChangedAction(object sender, GameManager.OnStateChangedArgs e) {
             if (e.State == GameManager.State.WaitingToStart) {
                 Show();
             } else {

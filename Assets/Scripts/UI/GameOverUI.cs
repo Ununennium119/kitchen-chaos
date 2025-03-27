@@ -1,11 +1,15 @@
-﻿using TMPro;
+﻿using Manager;
+using TMPro;
 using UnityEngine;
+using UnityEngine.Serialization;
 using UnityEngine.UI;
 
 namespace UI {
     public class GameOverUI : MonoBehaviour {
-        [SerializeField] private TextMeshProUGUI recipesDeliveredCountText;
-        [SerializeField] private Button mainMenuButton;
+        [SerializeField, Tooltip("The text to show number of delivered orders")]
+        private TextMeshProUGUI deliveredOrdersCountText;
+        [SerializeField, Tooltip("The main menu button")]
+        private Button mainMenuButton;
 
 
         private GameManager _gameManager;
@@ -20,16 +24,16 @@ namespace UI {
             _gameManager = GameManager.Instance;
             _deliveryManager = DeliveryManager.Instance;
 
-            _gameManager.OnStateChanged += OnStateChangedAction;
+            _gameManager.OnStateChanged += OnGameStateChangedAction;
             gameObject.SetActive(false);
         }
 
         private void Update() {
-            recipesDeliveredCountText.text = _deliveryManager.GetDeliveredRecipesCount().ToString();
+            deliveredOrdersCountText.text = _deliveryManager.GetDeliveredOrdersCount().ToString();
         }
 
 
-        private void OnStateChangedAction(object sender, GameManager.OnStateChangedArgs e) {
+        private void OnGameStateChangedAction(object sender, GameManager.OnStateChangedArgs e) {
             var isActive = e.State == GameManager.State.GameOver;
             gameObject.SetActive(isActive);
             mainMenuButton.Select();

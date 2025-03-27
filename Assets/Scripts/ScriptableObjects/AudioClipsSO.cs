@@ -1,7 +1,10 @@
 ﻿using UnityEngine;
 
 namespace ScriptableObjects {
-    [CreateAssetMenu]
+    /// <summary>
+    /// Contains lists of audio clips for different sound effects.
+    /// </summary>
+    [CreateAssetMenu(menuName = "Scriptable Object/Audio Clips")]
     public class AudioClipsSO : ScriptableObject {
         public AudioClip[] chopAudioClips;
         public AudioClip[] deliverySuccessAudioClips;

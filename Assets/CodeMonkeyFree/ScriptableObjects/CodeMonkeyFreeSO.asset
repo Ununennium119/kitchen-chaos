@@ -14,11 +14,11 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   currentVersion: 1.00
   subtype: kitchenchaos
-  lastShownTimestamp: 1742923484
+  lastShownTimestamp: 1743015283
   lastUpdateResponse:
     version: 1.01
     versionUrl: https://unitycodemonkey.com
-  checkedLastUpdateTimestamp: 1742923484
+  checkedLastUpdateTimestamp: 1743015283
   lastQOTDResponse:
     questionId: 164
     questionText: What is the correct way to show a variable in the Editor?
@@ -27,26 +27,26 @@ MonoBehaviour:
     answerC: '[SerializeField] private int health;'
     answerD: private int health;
     answerE: 
-  lastQotdTimestamp: 1742923484
+  lastQotdTimestamp: 1743015283
   lastDynamicHeaderResponse:
-    topImageUrl: https://codemonkeyexternal.blob.core.windows.net/external/Misc/humbleBundleSyntyMar25.png
-    topText: Make ANY game with these awesome Assets! (96% OFF ENDS SOON!)
+    topImageUrl: https://codemonkeyexternal.blob.core.windows.net/external/Misc/humbleBundleSyntyMar25EndSoon.png
+    topText: Make ANY game with these awesome Assets! (97% OFF ENDS SOON!)
     topLink: humblebundle
     bottomText: Learn Unity DOTS for MASSIVE Performance Boosts! (and make an RTS)
     bottomLink: dotscourse
-  lastDynamicHeaderTimestamp: 1742923484
+  lastDynamicHeaderTimestamp: 1743015283
   websiteLatestMessage:
     text: <a href="https://cmonkey.co/freecourses">Check out all my FREE courses!
       Click here!</a>
-  websiteLatestMessageTimestamp: 1742923484
+  websiteLatestMessageTimestamp: 1743015283
   websiteLatestVideos:
     videos:
+    - youTubeId: 2-B1HH0rWRI
+      title: EVERYTHING Steam did in 2024! (Devs NEED to Know)
     - youTubeId: QYrKiHq7Vaw
       title: TOP 10 NEW Systems and Tools MARCH 2025! | Unity Asset Store
     - youTubeId: ZIg7VoD9ptI
       title: The FUTURE of Unity in 2025 and BEYOND!
     - youTubeId: W_XOZAWJF24
       title: I made the MOST PROFITABLE Game as a Test!
-    - youTubeId: J0KMvH-yFmA
-      title: TOP 10 NEW Games, Made with Unity! (FEBRUARY 2025)
-  websiteLatestVideosTimestamp: 1742923484
+  websiteLatestVideosTimestamp: 1743015283
