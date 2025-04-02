@@ -134,7 +134,7 @@ namespace Manager {
 
 
         private void Awake() {
-            Debug.Log("Settings up InputManager...");
+            Debug.Log("Setting up InputManager...");
             if (Instance != null) {
                 Debug.LogError("There is more than one InputManager instance!");
             }

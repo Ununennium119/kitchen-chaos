@@ -66,12 +66,13 @@ namespace Audio {
 
         private void Start() {
             _deliveryManager = DeliveryManager.Instance;
-            _playerController = PlayerController.Instance;
+            // TODO: Fix
+            // _playerController = PlayerController.Instance;
 
             _deliveryManager.OnDeliverySuccess += PlayDeliverySuccessAudioClip;
             _deliveryManager.OnDeliveryFail += PlayDeliveryFailAudioClip;
-            _playerController.OnObjectPickup += PlayObjectPickupAudioClip;
-            _playerController.OnObjectDrop += PlayObjectDropAudioClip;
+            // _playerController.OnObjectPickup += PlayObjectPickupAudioClip;
+            // _playerController.OnObjectDrop += PlayObjectDropAudioClip;
             CuttingCounter.OnAnyCut += PlayChopAudioClip;
             TrashCounter.OnTrash += PlayTrashAudioClip;
         }

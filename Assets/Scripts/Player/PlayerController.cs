@@ -3,12 +3,14 @@ using Counter;
 using Counter.Logic;
 using KitchenObject;
 using Manager;
+using Unity.Netcode;
 using UnityEngine;
 
 namespace Player {
     /// <remarks>This class is singleton.</remarks>
-    public class PlayerController : MonoBehaviour, IKitchenObjectParent {
-        public static PlayerController Instance { get; private set; }
+    public class PlayerController : NetworkBehaviour, IKitchenObjectParent {
+        // TODO: Fix
+        // public static PlayerController Instance { get; private set; }
 
 
         /// <summary>
@@ -103,10 +105,10 @@ namespace Player {
 
         private void Awake() {
             Debug.Log("Setting up PlayerController...");
-            if (Instance != null) {
-                Debug.LogError("There is more than one PlayerController in the scene!");
-            }
-            Instance = this;
+            // if (Instance != null) {
+            // Debug.LogError("There is more than one PlayerController in the scene!");
+            // }
+            // Instance = this;
         }
 
         private void Start() {
@@ -118,6 +120,8 @@ namespace Player {
         }
 
         private void Update() {
+            if (!IsOwner) return;
+
             // Calculate movement direction and update walking
             var movementVector = _inputManager.GetPlayerMovementVectorNormalized();
             var movementDirection = new Vector3(movementVector.x, 0, movementVector.y);

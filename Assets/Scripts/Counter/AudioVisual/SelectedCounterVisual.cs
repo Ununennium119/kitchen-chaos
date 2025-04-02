@@ -11,7 +11,8 @@ namespace Counter.AudioVisual {
 
 
         private void Start() {
-            PlayerController.Instance.OnSelectedCounterChanged += OnSelectedCounterChangedAction;
+            // TODO: Fix
+            // PlayerController.Instance.OnSelectedCounterChanged += OnSelectedCounterChangedAction;
         }
 
 

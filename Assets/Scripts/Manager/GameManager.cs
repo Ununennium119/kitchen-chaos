@@ -89,6 +89,9 @@ namespace Manager {
 
             _inputManager.OnPausePerformed += OnPausePerformedPerformedAction;
             _inputManager.OnInteractPerformed += OnInteractPerformedPerformedAction;
+
+            // TODO: Remove (DEBUG)
+            ChangeState(State.Playing);
         }
 
         private void Update() {
