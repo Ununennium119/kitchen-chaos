@@ -1,15 +1,17 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using KitchenObject;
 using ScriptableObjects;
+using Unity.Netcode;
 using UnityEngine;
 using Random = UnityEngine.Random;
 
 namespace Manager {
     /// <summary>This class is responsible for managing orders and delivering plates.</summary>
     /// <remarks>This class is singleton</remarks>
-    public class DeliveryManager : MonoBehaviour {
+    public class DeliveryManager : NetworkBehaviour {
         public static DeliveryManager Instance { get; private set; }
 
 
@@ -55,8 +57,9 @@ namespace Manager {
         /// <returns>true if plate is delivered successfully</returns>
         public bool DeliverPlate(PlateKitchenObject plateKitchenObject) {
             OrderRecipeSO deliveredWaitingOrderRecipeSO = null;
+            var deliveredWaitingOrderIndex = -1;
             var plateKitchenObjectSOList = plateKitchenObject.GetKitchenObjectSOList();
-            foreach (var waitingOrderRecipeSO in _waitingOrderRecipeSOList) {
+            foreach (var (waitingOrderRecipeSO, index) in _waitingOrderRecipeSOList.Select((value, index) => (value, index))) {
                 var waitingOrderKitchenObjectSOList = waitingOrderRecipeSO.kitchenObjectSOList;
                 if (waitingOrderKitchenObjectSOList.Count != plateKitchenObjectSOList.Count) continue;
 
@@ -66,17 +69,15 @@ namespace Manager {
                 if (!doesWaitingOrderMatchesPlate) continue;
 
                 deliveredWaitingOrderRecipeSO = waitingOrderRecipeSO;
+                deliveredWaitingOrderIndex = index;
                 break;
             }
             if (deliveredWaitingOrderRecipeSO == null) {
-                OnDeliveryFail?.Invoke(this, EventArgs.Empty);
+                FailedDeliveryServerRpc();
                 return false;
             }
 
-            _waitingOrderRecipeSOList.Remove(deliveredWaitingOrderRecipeSO);
-            OnOrderDeSpawned?.Invoke(this, EventArgs.Empty);
-            OnDeliverySuccess?.Invoke(this, EventArgs.Empty);
-            _deliveredOrdersCount += 1;
+            SuccessfulDeliveryServerRpc(deliveredWaitingOrderIndex);
             return true;
         }
 
@@ -106,8 +107,12 @@ namespace Manager {
             _gameManager = GameManager.Instance;
 
             _gameManager.OnStateChanged += OnGameStateChangedAction;
+        }
 
-            StartCoroutine(OrderSpawnCoroutine());
+        public override void OnNetworkSpawn() {
+            if (IsServer) {
+                StartCoroutine(OrderSpawnCoroutine());
+            }
         }
 
 
@@ -119,9 +124,7 @@ namespace Manager {
                 if (_waitingOrderRecipeSOList.Count >= maxOrdersCount) continue;
 
                 var orderRecipeSOIndex = Random.Range(0, orderRecipeListSO.orderRecipeSOList.Count);
-                var newOrderRecipeSO = orderRecipeListSO.orderRecipeSOList[orderRecipeSOIndex];
-                _waitingOrderRecipeSOList.Add(newOrderRecipeSO);
-                OnOrderSpawned?.Invoke(this, EventArgs.Empty);
+                SpawnOrderClientRpc(orderRecipeSOIndex);
             }
             // ReSharper disable once IteratorNeverReturns
         }
@@ -129,6 +132,37 @@ namespace Manager {
 
         private void OnGameStateChangedAction(object sender, GameManager.OnStateChangedArgs e) {
             _isDeliveryActive = e.State == GameManager.State.Playing;
+        }
+
+
+        [ServerRpc(RequireOwnership = false)]
+        private void SuccessfulDeliveryServerRpc(int orderIndex) {
+            SuccessfullyDeliveryClientRpc(orderIndex);
+        }
+
+        [ServerRpc(RequireOwnership = false)]
+        private void FailedDeliveryServerRpc() {
+            FailedDeliveryClientRpc();
+        }
+
+        [ClientRpc]
+        private void SuccessfullyDeliveryClientRpc(int orderIndex) {
+            _waitingOrderRecipeSOList.RemoveAt(orderIndex);
+            OnOrderDeSpawned?.Invoke(this, EventArgs.Empty);
+            OnDeliverySuccess?.Invoke(this, EventArgs.Empty);
+            _deliveredOrdersCount += 1;
+        }
+
+        [ClientRpc]
+        private void FailedDeliveryClientRpc() {
+            OnDeliveryFail?.Invoke(this, EventArgs.Empty);
+        }
+
+        [ClientRpc]
+        private void SpawnOrderClientRpc(int orderIndex) {
+            var newOrderRecipeSO = orderRecipeListSO.orderRecipeSOList[orderIndex];
+            _waitingOrderRecipeSOList.Add(newOrderRecipeSO);
+            OnOrderSpawned?.Invoke(this, EventArgs.Empty);
         }
     }
 }

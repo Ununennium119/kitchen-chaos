@@ -1,10 +1,11 @@
 ﻿using System;
 using KitchenObject;
 using Player;
+using Unity.Netcode;
 using UnityEngine;
 
 namespace Counter.Logic {
-    public class BaseCounter : MonoBehaviour, IKitchenObjectParent {
+    public class BaseCounter : NetworkBehaviour, IKitchenObjectParent {
         [SerializeField, Tooltip("The position in which the kitchen object is placed in the scene")]
         private Transform counterTopPoint;
 
