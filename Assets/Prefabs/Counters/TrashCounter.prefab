@@ -8,6 +8,10 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 0}
     m_Modifications:
+    - target: {fileID: -1712079768730875196, guid: 836ffac803b43eb44ae4bb914af908c1, type: 3}
+      propertyPath: GlobalObjectIdHash
+      value: 1253476617
+      objectReference: {fileID: 0}
     - target: {fileID: 3387558104430604392, guid: 836ffac803b43eb44ae4bb914af908c1, type: 3}
       propertyPath: m_LocalPosition.x
       value: 0
@@ -93,6 +97,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 699fec60dcec47afb1155e76797f72ce, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  ShowTopMostFoldoutHeaderGroup: 1
   counterTopPoint: {fileID: 1294695135731316904}
 --- !u!1001 &2982954969388873794
 PrefabInstance:

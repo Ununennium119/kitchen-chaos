@@ -343,6 +343,10 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 0}
     m_Modifications:
+    - target: {fileID: -1712079768730875196, guid: 836ffac803b43eb44ae4bb914af908c1, type: 3}
+      propertyPath: GlobalObjectIdHash
+      value: 2163062798
+      objectReference: {fileID: 0}
     - target: {fileID: 3387558104430604392, guid: 836ffac803b43eb44ae4bb914af908c1, type: 3}
       propertyPath: m_LocalPosition.x
       value: 0
@@ -421,6 +425,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 09688c36e64a42489ff383f407ff2d4c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  ShowTopMostFoldoutHeaderGroup: 1
   counterTopPoint: {fileID: 7444601956878780764}
   cuttingRecipeSOArray:
   - {fileID: 11400000, guid: 8a331326f869c5b49a67e57756199ec6, type: 2}

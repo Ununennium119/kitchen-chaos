@@ -194,6 +194,10 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 0}
     m_Modifications:
+    - target: {fileID: -1712079768730875196, guid: 836ffac803b43eb44ae4bb914af908c1, type: 3}
+      propertyPath: GlobalObjectIdHash
+      value: 1096176662
+      objectReference: {fileID: 0}
     - target: {fileID: 3387558104430604392, guid: 836ffac803b43eb44ae4bb914af908c1, type: 3}
       propertyPath: m_LocalPosition.x
       value: 0
@@ -278,6 +282,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b2a1e44d6d124fb69cfd2467b9ca1e6d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  ShowTopMostFoldoutHeaderGroup: 1
   counterTopPoint: {fileID: 6873364413774117032}
   plateKitchenObjectSO: {fileID: 11400000, guid: 500e62342879c31448eb45e76313c9ec, type: 2}
 --- !u!4 &6873364413774117032 stripped

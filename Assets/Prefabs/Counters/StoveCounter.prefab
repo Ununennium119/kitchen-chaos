@@ -267,9 +267,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 288e8598aa134d58ba7589092395d2c2, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  warningThreshold: 0.5
-  warningAudioMaxTime: 0.5
   stoveCounter: {fileID: 5153424004207239876}
+  warningThreshold: 0.5
+  warningCooldown: 0.35
 --- !u!1 &8846141487367246571
 GameObject:
   m_ObjectHideFlags: 0
@@ -624,6 +624,10 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 0}
     m_Modifications:
+    - target: {fileID: -1712079768730875196, guid: 836ffac803b43eb44ae4bb914af908c1, type: 3}
+      propertyPath: GlobalObjectIdHash
+      value: 3129216288
+      objectReference: {fileID: 0}
     - target: {fileID: 1855754095428330043, guid: 836ffac803b43eb44ae4bb914af908c1, type: 3}
       propertyPath: m_LocalPosition.x
       value: 0.05
@@ -720,6 +724,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 557ec8f849f44284ba610631587c8f16, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  ShowTopMostFoldoutHeaderGroup: 1
   counterTopPoint: {fileID: 4877920776947996829}
   fryingRecipeSOArray:
   - {fileID: 11400000, guid: 6fb0621149dc9d949a3108745a4f17bb, type: 2}

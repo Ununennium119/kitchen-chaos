@@ -1,3 +1,4 @@
+using System;
 using Counter.Logic;
 using Player;
 using UnityEngine;
@@ -10,11 +11,15 @@ namespace Counter.AudioVisual {
         private GameObject[] visualGameObjects;
 
 
-        private void Start() {
-            // TODO: Fix
-            // PlayerController.Instance.OnSelectedCounterChanged += OnSelectedCounterChangedAction;
+        private void Awake() {
+            PlayerController.OnLocalPlayerNetworkSpawned += OnLocalPlayerNetworkSpawnedAction;
         }
 
+
+        private void OnLocalPlayerNetworkSpawnedAction(object sender, EventArgs e) {
+            PlayerController.LocalInstance.OnSelectedCounterChanged -= OnSelectedCounterChangedAction;
+            PlayerController.LocalInstance.OnSelectedCounterChanged += OnSelectedCounterChangedAction;
+        }
 
         private void OnSelectedCounterChangedAction(object sender, PlayerController.OnSelectedCounterChangedArgs e) {
             var active = e.SelectedCounter == counter;

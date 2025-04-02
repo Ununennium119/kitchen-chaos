@@ -47,6 +47,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: ac45f00d8fd7a7548b2813aee1e9f375, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  ShowTopMostFoldoutHeaderGroup: 1
   counter: {fileID: 6101430418171225452}
   visualGameObjects:
   - {fileID: 7217164224027119876}
@@ -242,6 +243,10 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 0}
     m_Modifications:
+    - target: {fileID: -1712079768730875196, guid: 836ffac803b43eb44ae4bb914af908c1, type: 3}
+      propertyPath: GlobalObjectIdHash
+      value: 971668900
+      objectReference: {fileID: 0}
     - target: {fileID: 3387558104430604392, guid: 836ffac803b43eb44ae4bb914af908c1, type: 3}
       propertyPath: m_LocalPosition.x
       value: 0
@@ -317,8 +322,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 87f5e95d5a6848e6b4787e32a3fc1f4e, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  ShowTopMostFoldoutHeaderGroup: 1
   counterTopPoint: {fileID: 6311212503228099813}
-  kitchenObjectScriptable: {fileID: 0}
+  kitchenObjectSO: {fileID: 0}
 --- !u!4 &6311212503228099813 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 1855754095428330043, guid: 836ffac803b43eb44ae4bb914af908c1, type: 3}

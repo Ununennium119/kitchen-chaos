@@ -1,5 +1,6 @@
 ﻿using Counter;
 using Counter.Logic;
+using Player;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -18,6 +19,7 @@ namespace UI.MainMenu {
             // Resetting (setting to null) all static objects used when loading main menu
             TrashCounter.ResetStaticObjects();
             CuttingCounter.ResetStaticObjects();
+            PlayerController.ResetStaticObjects();
 
             // Resetting time scale
             Time.timeScale = 1f;

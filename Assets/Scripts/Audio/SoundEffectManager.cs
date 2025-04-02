@@ -1,9 +1,9 @@
 ﻿using System;
-using Counter;
 using Counter.Logic;
 using Manager;
 using Player;
 using ScriptableObjects;
+using Unity.Netcode;
 using UnityEngine;
 using Random = UnityEngine.Random;
 
@@ -12,7 +12,7 @@ namespace Audio {
     /// Manages playing the sound effects and modifying their volume.
     /// </summary>
     /// <remarks>This class is singleton.</remarks>
-    public class SoundEffectManager : MonoBehaviour {
+    public class SoundEffectManager : NetworkBehaviour {
         public static SoundEffectManager Instance { get; private set; }
 
 
@@ -21,7 +21,6 @@ namespace Audio {
 
 
         private DeliveryManager _deliveryManager;
-        private PlayerController _playerController;
         /// <summary>
         /// Adjusts the volume of sound effects, configurable by the player in the options menu.
         /// </summary>
@@ -66,13 +65,11 @@ namespace Audio {
 
         private void Start() {
             _deliveryManager = DeliveryManager.Instance;
-            // TODO: Fix
-            // _playerController = PlayerController.Instance;
 
             _deliveryManager.OnDeliverySuccess += PlayDeliverySuccessAudioClip;
             _deliveryManager.OnDeliveryFail += PlayDeliveryFailAudioClip;
-            // _playerController.OnObjectPickup += PlayObjectPickupAudioClip;
-            // _playerController.OnObjectDrop += PlayObjectDropAudioClip;
+            PlayerController.OnAnyObjectPickup += PlayObjectPickupAudioClip;
+            PlayerController.OnAnyObjectDrop += PlayObjectDropAudioClip;
             CuttingCounter.OnAnyCut += PlayChopAudioClip;
             TrashCounter.OnTrash += PlayTrashAudioClip;
         }
@@ -86,12 +83,12 @@ namespace Audio {
             PlaySound(audioClipsSO.deliveryFailAudioClips, _deliveryManager.transform.position);
         }
 
-        private void PlayObjectPickupAudioClip(object sender, EventArgs e) {
-            PlaySound(audioClipsSO.objectPickupAudioClips, _playerController.transform.position);
+        private void PlayObjectPickupAudioClip(object sender, PlayerController.OnAnyObjectPickupArgs e) {
+            PlaySound(audioClipsSO.objectPickupAudioClips, e.Position);
         }
 
-        private void PlayObjectDropAudioClip(object sender, EventArgs e) {
-            PlaySound(audioClipsSO.objectDropAudioClips, _playerController.transform.position);
+        private void PlayObjectDropAudioClip(object sender, PlayerController.OnAnyObjectDropArgs e) {
+            PlaySound(audioClipsSO.objectDropAudioClips, e.Position);
         }
 
         private void PlayChopAudioClip(object sender, EventArgs e) {

@@ -1,5 +1,4 @@
 using System;
-using Counter;
 using Counter.Logic;
 using KitchenObject;
 using Manager;
@@ -7,10 +6,37 @@ using Unity.Netcode;
 using UnityEngine;
 
 namespace Player {
-    /// <remarks>This class is singleton.</remarks>
+    /// <remarks>There is only one player controller per player.</remarks>
     public class PlayerController : NetworkBehaviour, IKitchenObjectParent {
-        // TODO: Fix
-        // public static PlayerController Instance { get; private set; }
+        public static PlayerController LocalInstance { get; private set; }
+
+        /// <summary>
+        /// This event is invoked whenever the local player network is spawned.
+        /// </summary>
+        public static event EventHandler OnLocalPlayerNetworkSpawned;
+
+        /// <summary>
+        /// This event is invoked whenever any player picks up an object.
+        /// </summary>
+        public static event EventHandler<OnAnyObjectPickupArgs> OnAnyObjectPickup;
+        public class OnAnyObjectPickupArgs : EventArgs {
+            public Vector3 Position;
+        }
+
+        /// <summary>
+        /// This event is invoked whenever any player drops an object.
+        /// </summary>
+        public static event EventHandler<OnAnyObjectDropArgs> OnAnyObjectDrop;
+        public class OnAnyObjectDropArgs : EventArgs {
+            public Vector3 Position;
+        }
+
+
+        public static void ResetStaticObjects() {
+            OnLocalPlayerNetworkSpawned = null;
+            OnAnyObjectPickup = null;
+            OnAnyObjectDrop = null;
+        }
 
 
         /// <summary>
@@ -20,16 +46,6 @@ namespace Player {
         public class OnSelectedCounterChangedArgs : EventArgs {
             public BaseCounter SelectedCounter;
         }
-
-        /// <summary>
-        /// This event is invoked whenever player picks up an object.
-        /// </summary>
-        public event EventHandler OnObjectPickup;
-
-        /// <summary>
-        /// This event is invoked whenever player drops an object.
-        /// </summary>
-        public event EventHandler OnObjectDrop;
 
 
         [Header("Movement")]
@@ -82,7 +98,7 @@ namespace Player {
         /// <remark>Implementation of <see cref="IKitchenObjectParent.SetKitchenObject"/>.</remark>
         public void SetKitchenObject(KitchenObject.KitchenObject kitchenObject) {
             if (kitchenObject is not null) {
-                OnObjectPickup?.Invoke(this, EventArgs.Empty);
+                OnAnyObjectPickup?.Invoke(this, new OnAnyObjectPickupArgs { Position = transform.position });
             }
             _kitchenObject = kitchenObject;
         }
@@ -91,7 +107,7 @@ namespace Player {
         /// <remark>Implementation of <see cref="IKitchenObjectParent.ClearKitchenObject"/>.</remark>
         public void ClearKitchenObject() {
             if (_kitchenObject is not null) {
-                OnObjectDrop?.Invoke(this, EventArgs.Empty);
+                OnAnyObjectDrop?.Invoke(this, new OnAnyObjectDropArgs { Position = transform.position });
             }
             _kitchenObject = null;
         }
@@ -102,14 +118,6 @@ namespace Player {
             return _kitchenObject is not null;
         }
 
-
-        private void Awake() {
-            Debug.Log("Setting up PlayerController...");
-            // if (Instance != null) {
-            // Debug.LogError("There is more than one PlayerController in the scene!");
-            // }
-            // Instance = this;
-        }
 
         private void Start() {
             _gameManager = GameManager.Instance;
@@ -129,6 +137,17 @@ namespace Player {
 
             HandleMovement(movementDirection);
             UpdateSelectedCounter();
+        }
+
+        public override void OnNetworkSpawn() {
+            if (!IsOwner) return;
+
+            Debug.Log("Setting up PlayerController...");
+            if (LocalInstance != null) {
+                Debug.LogError("There is more than one PlayerController in the scene!");
+            }
+            LocalInstance = this;
+            OnLocalPlayerNetworkSpawned?.Invoke(this, EventArgs.Empty);
         }
 
 

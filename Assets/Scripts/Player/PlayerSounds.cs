@@ -1,4 +1,5 @@
-﻿using Audio;
+﻿using System;
+using Audio;
 using UnityEngine;
 
 namespace Player {
@@ -16,12 +17,12 @@ namespace Player {
 
         private void Awake() {
             _footstepSoundTime = footstepSoundCooldown;
+
+            PlayerController.OnLocalPlayerNetworkSpawned += OnLocalPlayerNetworkSpawnedAction;
         }
 
         private void Start() {
             _soundEffectManager = SoundEffectManager.Instance;
-            // TODO: Fix
-            // _playerController = PlayerController.Instance;
         }
 
         private void Update() {
@@ -29,9 +30,14 @@ namespace Player {
             if (_footstepSoundTime > 0f) return;
 
             _footstepSoundTime = footstepSoundCooldown;
-            // if (_playerController.IsWalking()) {
-                // _soundEffectManager.PlayFootstepSound(_playerController.transform.position, footstepSoundVolume);
-            // }
+            if (_playerController?.IsWalking() == true) {
+                _soundEffectManager.PlayFootstepSound(_playerController.transform.position, footstepSoundVolume);
+            }
+        }
+
+
+        private void OnLocalPlayerNetworkSpawnedAction(object sender, EventArgs e) {
+            _playerController = PlayerController.LocalInstance;
         }
     }
 }
