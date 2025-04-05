@@ -3339,7 +3339,7 @@ MonoBehaviour:
   NetworkConfig:
     ProtocolVersion: 0
     NetworkTransport: {fileID: 333512844}
-    PlayerPrefab: {fileID: 91759288036532034, guid: 34d620c286e60f843a5f3d80c24b6380, type: 3}
+    PlayerPrefab: {fileID: 91759288036532034, guid: 90f3986678ae4714d995df73a49f4502, type: 3}
     Prefabs:
       NetworkPrefabsLists:
       - {fileID: 11400000, guid: 3627b6fb69d044a78c118e5f67c94814, type: 2}
@@ -9377,11 +9377,11 @@ MonoBehaviour:
   m_GameObject: {fileID: 1094222920}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: f0f77b57c56e41f181922c76df005017, type: 3}
+  m_Script: {fileID: 11500000, guid: 5ae4d1fdd34ed7e42bab31d021c19ec1, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
   ShowTopMostFoldoutHeaderGroup: 1
-  kitchenObjectListSO: {fileID: 11400000, guid: e61ed2d7e4654cc4ba9a1a33df48fdbc, type: 2}
+  kitchenObjectListSO: {fileID: 11400000, guid: f18dec20720db2f4a8d6261b83e5ba61, type: 2}
 --- !u!4 &1094222923
 Transform:
   m_ObjectHideFlags: 0
@@ -14419,7 +14419,7 @@ MonoBehaviour:
   m_GameObject: {fileID: 1648263350}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 8932fba2dfd14484bbd80aa75bc56b05, type: 3}
+  m_Script: {fileID: 11500000, guid: 5c77f3dd3ab08f445b297f0b8e62a046, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
   ShowTopMostFoldoutHeaderGroup: 1

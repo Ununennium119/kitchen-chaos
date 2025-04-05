@@ -12,7 +12,7 @@ namespace Audio {
     /// Manages playing the sound effects and modifying their volume.
     /// </summary>
     /// <remarks>This class is singleton.</remarks>
-    public class SoundEffectManager : NetworkBehaviour {
+    public class SoundEffectManager : MonoBehaviour {
         public static SoundEffectManager Instance { get; private set; }
 
 
