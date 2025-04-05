@@ -118,6 +118,12 @@ namespace Player {
             return _kitchenObject is not null;
         }
 
+        /// <inheritdoc cref="IKitchenObjectParent.GetNetworkObject"/>
+        /// <remark>Implementation of <see cref="IKitchenObjectParent.GetNetworkObject"/>.</remark>
+        public NetworkObjectReference GetNetworkObject() {
+            return NetworkObject;
+        }
+
 
         private void Start() {
             _gameManager = GameManager.Instance;

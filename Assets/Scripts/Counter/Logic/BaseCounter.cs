@@ -60,5 +60,11 @@ namespace Counter.Logic {
         public bool HasKitchenObject() {
             return _kitchenObject is not null;
         }
+
+        /// <inheritdoc cref="IKitchenObjectParent.GetNetworkObject"/>
+        /// <remark>Implementation of <see cref="IKitchenObjectParent.GetNetworkObject"/>.</remark>
+        public NetworkObjectReference GetNetworkObject() {
+            return NetworkObject;
+        }
     }
 }

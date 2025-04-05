@@ -1,4 +1,5 @@
-﻿using UnityEngine;
+﻿using Unity.Netcode;
+using UnityEngine;
 
 namespace KitchenObject {
     public interface IKitchenObjectParent {
@@ -21,5 +22,8 @@ namespace KitchenObject {
 
         /// <returns>true if the parent has kitchen object</returns>
         public bool HasKitchenObject();
+
+        /// <returns>network object reference</returns>
+        public NetworkObjectReference GetNetworkObject();
     }
 }

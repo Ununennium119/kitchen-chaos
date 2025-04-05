@@ -1,8 +1,13 @@
+using System;
+using Multiplayer;
 using ScriptableObjects;
+using Unity.Netcode;
 using UnityEngine;
+using Utility;
 
 namespace KitchenObject {
-    public class KitchenObject : MonoBehaviour {
+    [RequireComponent(typeof(FollowTransform))]
+    public class KitchenObject : NetworkBehaviour {
         [SerializeField, Tooltip("Scriptable object of the kitchen object")]
         private KitchenObjectSO kitchenObjectSO;
 
@@ -19,8 +24,7 @@ namespace KitchenObject {
             KitchenObjectSO kitchenObjectSO,
             IKitchenObjectParent parent
         ) {
-            var kitchenObjectTransform = Instantiate(kitchenObjectSO.prefab);
-            kitchenObjectTransform.GetComponent<KitchenObject>().SetParent(parent);
+            MultiplayerManager.Instance.SpawnKitchenObject(kitchenObjectSO, parent);
         }
 
 
@@ -54,21 +58,14 @@ namespace KitchenObject {
         /// </summary>
         /// <param name="newParent">The new parent</param>
         public void SetParent(IKitchenObjectParent newParent) {
-            if (newParent.HasKitchenObject()) {
-                Debug.LogError("Trying to set kitchen object for a prent which already has one!");
-            }
-            newParent.SetKitchenObject(this);
-            transform.parent = newParent.GetKitchenObjectFollowTransform();
-            transform.localPosition = Vector3.zero;
-            _parent = newParent;
+            SetParentServerRpc(newParent.GetNetworkObject());
         }
 
         /// <summary>
         /// Clears parent of this kitchen object.
         /// </summary>
         public void ClearParent() {
-            _parent?.ClearKitchenObject();
-            _parent = null;
+            ClearParentServerRpc();
         }
 
         /// <summary>
@@ -77,6 +74,37 @@ namespace KitchenObject {
         public void DestroySelf() {
             _parent?.ClearKitchenObject();
             Destroy(gameObject);
+        }
+
+
+        [ServerRpc(RequireOwnership = false)]
+        private void SetParentServerRpc(NetworkObjectReference newParentNetworkObjectReference) {
+            SetParentClientRpc(newParentNetworkObjectReference);
+        }
+
+        [ClientRpc]
+        private void SetParentClientRpc(NetworkObjectReference newParentNetworkObjectReference) {
+            newParentNetworkObjectReference.TryGet(out var newParentNetworkObject);
+            var newParent = newParentNetworkObject.GetComponent<IKitchenObjectParent>();
+            if (newParent.HasKitchenObject()) {
+                Debug.LogError("Trying to set kitchen object for a parent which already has one!");
+            }
+            newParent.SetKitchenObject(this);
+            var followTransform = GetComponent<FollowTransform>();
+            followTransform.SetTargetTransform(newParent.GetKitchenObjectFollowTransform());
+            transform.localPosition = Vector3.zero;
+            _parent = newParent;
+        }
+
+        [ServerRpc(RequireOwnership = false)]
+        private void ClearParentServerRpc() {
+            ClearParentClientRpc();
+        }
+
+        [ClientRpc]
+        private void ClearParentClientRpc() {
+            _parent?.ClearKitchenObject();
+            _parent = null;
         }
     }
 }
