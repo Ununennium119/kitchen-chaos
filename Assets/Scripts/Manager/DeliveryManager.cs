@@ -59,7 +59,11 @@ namespace Manager {
             OrderRecipeSO deliveredWaitingOrderRecipeSO = null;
             var deliveredWaitingOrderIndex = -1;
             var plateKitchenObjectSOList = plateKitchenObject.GetKitchenObjectSOList();
-            foreach (var (waitingOrderRecipeSO, index) in _waitingOrderRecipeSOList.Select((value, index) => (value, index))) {
+            foreach (
+                var (waitingOrderRecipeSO, index) in _waitingOrderRecipeSOList.Select(
+                    (value, index) => (value, index)
+                )
+            ) {
                 var waitingOrderKitchenObjectSOList = waitingOrderRecipeSO.kitchenObjectSOList;
                 if (waitingOrderKitchenObjectSOList.Count != plateKitchenObjectSOList.Count) continue;
 

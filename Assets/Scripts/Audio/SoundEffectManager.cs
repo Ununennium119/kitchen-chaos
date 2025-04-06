@@ -3,7 +3,6 @@ using Counter.Logic;
 using Manager;
 using Player;
 using ScriptableObjects;
-using Unity.Netcode;
 using UnityEngine;
 using Random = UnityEngine.Random;
 

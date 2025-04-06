@@ -1,5 +1,6 @@
 using System;
 using System.Linq;
+using Player;
 using ScriptableObjects;
 using UI.WorldSpace.Progress;
 using UnityEngine;
@@ -38,7 +39,7 @@ namespace Counter.Logic {
         private float _burningTime;
 
 
-        public override void Interact(Player.PlayerController playerController) {
+        public override void Interact(PlayerController playerController) {
             var playerKitchenObject = playerController.GetKitchenObject();
             var counterKitchenObject = GetKitchenObject();
 

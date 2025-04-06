@@ -49,7 +49,8 @@ namespace UI {
             keyboardAlternativeInteractText.text =
                 _inputManager.GetPlayerBindingDisplayString(InputManager.Binding.AlternativeInteract);
             keyboardPauseText.text = _inputManager.GetPlayerBindingDisplayString(InputManager.Binding.Pause);
-            gamepadInteractText.text = _inputManager.GetPlayerBindingDisplayString(InputManager.Binding.GamepadInteract);
+            gamepadInteractText.text =
+                _inputManager.GetPlayerBindingDisplayString(InputManager.Binding.GamepadInteract);
             gamepadAlternativeInteractText.text =
                 _inputManager.GetPlayerBindingDisplayString(InputManager.Binding.GamepadAlternativeInteract);
             gamepadPauseText.text = _inputManager.GetPlayerBindingDisplayString(InputManager.Binding.GamepadPause);

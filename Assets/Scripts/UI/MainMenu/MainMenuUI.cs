@@ -1,5 +1,4 @@
-﻿using Counter;
-using Counter.Logic;
+﻿using Counter.Logic;
 using Player;
 using UnityEngine;
 using UnityEngine.UI;

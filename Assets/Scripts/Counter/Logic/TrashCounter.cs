@@ -1,4 +1,5 @@
 using System;
+using Player;
 
 namespace Counter.Logic {
     public class TrashCounter : BaseCounter {
@@ -13,7 +14,7 @@ namespace Counter.Logic {
         }
 
 
-        public override void Interact(Player.PlayerController playerController) {
+        public override void Interact(PlayerController playerController) {
             if (!playerController.HasKitchenObject()) return;
 
             playerController.GetKitchenObject().DestroySelf();

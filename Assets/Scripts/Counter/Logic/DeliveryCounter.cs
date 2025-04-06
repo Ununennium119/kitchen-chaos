@@ -2,7 +2,6 @@ using System;
 using Manager;
 using Player;
 using Unity.Netcode;
-using UnityEngine;
 
 namespace Counter.Logic {
     public class DeliveryCounter : BaseCounter {

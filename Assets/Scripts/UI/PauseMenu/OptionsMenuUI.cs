@@ -131,7 +131,8 @@ namespace UI.PauseMenu {
             alternativeInteractText.text =
                 _inputManager.GetPlayerBindingDisplayString(InputManager.Binding.AlternativeInteract);
             pauseText.text = _inputManager.GetPlayerBindingDisplayString(InputManager.Binding.Pause);
-            gamepadInteractText.text = _inputManager.GetPlayerBindingDisplayString(InputManager.Binding.GamepadInteract);
+            gamepadInteractText.text =
+                _inputManager.GetPlayerBindingDisplayString(InputManager.Binding.GamepadInteract);
             gamepadAlternativeInteractText.text =
                 _inputManager.GetPlayerBindingDisplayString(InputManager.Binding.GamepadAlternativeInteract);
             gamepadPauseText.text = _inputManager.GetPlayerBindingDisplayString(InputManager.Binding.GamepadPause);
