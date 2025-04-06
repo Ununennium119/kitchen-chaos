@@ -1,5 +1,6 @@
 using System;
 using ScriptableObjects;
+using Unity.Netcode;
 using UnityEngine;
 
 namespace Counter.Logic {
@@ -27,11 +28,22 @@ namespace Counter.Logic {
             if (playerController.HasKitchenObject()) return;
 
             KitchenObject.KitchenObject.SpawnKitchenObject(kitchenObjectSO, playerController);
-            OnContainerOpened?.Invoke(this, EventArgs.Empty);
+            InvokeOnContainerOpenedServerRpc();
         }
 
         public override void InteractAlternate() {
             // Do Nothing
+        }
+
+
+        [ServerRpc(RequireOwnership = false)]
+        private void InvokeOnContainerOpenedServerRpc() {
+            InvokeOnContainerOpenedClientRpc();
+        }
+
+        [ClientRpc]
+        private void InvokeOnContainerOpenedClientRpc() {
+            OnContainerOpened?.Invoke(this, EventArgs.Empty);
         }
     }
 }
