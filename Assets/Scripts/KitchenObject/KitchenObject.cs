@@ -71,8 +71,8 @@ namespace KitchenObject {
         /// Removes this kitchen object from its parent and destroys itself.
         /// </summary>
         public void DestroySelf() {
-            _parent?.ClearKitchenObject();
-            Destroy(gameObject);
+            ClearParentKitchenObjectServerRpc();
+            MultiplayerManager.Instance.DestroyKitchenObject(this);
         }
 
 
@@ -104,6 +104,16 @@ namespace KitchenObject {
         private void ClearParentClientRpc() {
             _parent?.ClearKitchenObject();
             _parent = null;
+        }
+
+        [ServerRpc(RequireOwnership = false)]
+        private void ClearParentKitchenObjectServerRpc() {
+            ClearParentKitchenObjectClientRpc();
+        }
+
+        [ClientRpc]
+        private void ClearParentKitchenObjectClientRpc() {
+            _parent?.ClearKitchenObject();
         }
     }
 }

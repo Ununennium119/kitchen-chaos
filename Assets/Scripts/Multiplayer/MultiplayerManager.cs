@@ -27,6 +27,14 @@ namespace Multiplayer {
             SpawnKitchenObjectServerRpc(index, parent.GetNetworkObject());
         }
 
+        /// <summary>
+        /// Removes the kitchen object from its parent and destroys itself by calling a server RPC.
+        /// </summary>
+        /// <param name="kitchenObject">The kitchen object to destroy</param>
+        public void DestroyKitchenObject(KitchenObject.KitchenObject kitchenObject) {
+            DestroyKitchenObjectServerRpc(kitchenObject.NetworkObject);
+        }
+
 
         private void Awake() {
             Debug.Log("Setting up MultiplayerManager");
@@ -56,6 +64,12 @@ namespace Multiplayer {
             kitchenObjectNetworkObject.Spawn();
 
             kitchenObjectTransform.GetComponent<KitchenObject.KitchenObject>().SetParent(parent);
+        }
+
+        [ServerRpc(RequireOwnership = false)]
+        private void DestroyKitchenObjectServerRpc(NetworkObjectReference kitchenObjectNetworkObjectReference) {
+            kitchenObjectNetworkObjectReference.TryGet(out var kitchenObjectNetworkObject);
+            kitchenObjectNetworkObject.Despawn();
         }
     }
 }
