@@ -431,6 +431,7 @@ MonoBehaviour:
   - {fileID: 11400000, guid: 8a331326f869c5b49a67e57756199ec6, type: 2}
   - {fileID: 11400000, guid: adc63f755d36c024c8de61842efab923, type: 2}
   - {fileID: 11400000, guid: c77fd21e881abf6409c8411f7b3b745e, type: 2}
+  kitchenObjectListSO: {fileID: 11400000, guid: f18dec20720db2f4a8d6261b83e5ba61, type: 2}
 --- !u!4 &5878176800674126607 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 3387558104430604392, guid: 836ffac803b43eb44ae4bb914af908c1, type: 3}
