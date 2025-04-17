@@ -726,8 +726,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   ShowTopMostFoldoutHeaderGroup: 1
   counterTopPoint: {fileID: 4877920776947996829}
-  fryingRecipeSOArray:
-  - {fileID: 11400000, guid: 6fb0621149dc9d949a3108745a4f17bb, type: 2}
+  fryingRecipeListSO: {fileID: 11400000, guid: f474ee1b7d62ced4baed9a746836b410, type: 2}
 --- !u!4 &4877920776947996829 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 1855754095428330043, guid: 836ffac803b43eb44ae4bb914af908c1, type: 3}

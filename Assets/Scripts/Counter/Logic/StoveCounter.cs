@@ -3,6 +3,7 @@ using System.Linq;
 using Player;
 using ScriptableObjects;
 using UI.WorldSpace.Progress;
+using Unity.Netcode;
 using UnityEngine;
 
 namespace Counter.Logic {
@@ -29,14 +30,14 @@ namespace Counter.Logic {
         public event EventHandler<IHasProgress.OnProgressChangedArgs> OnProgressChanged;
 
 
-        [SerializeField, Tooltip("Scriptable objects of the frying recipes.")]
-        private FryingRecipeSO[] fryingRecipeSOArray;
+        [SerializeField, Tooltip("Scriptable object of list of the frying recipes.")]
+        private FryingRecipeListSO fryingRecipeListSO;
 
 
         private FryingRecipeSO _currentFryingRecipeSO;
         private State _currentState;
-        private float _fryingTime;
-        private float _burningTime;
+        private readonly NetworkVariable<float> _fryingTime = new();
+        private readonly NetworkVariable<float> _burningTime = new();
 
 
         public override void Interact(PlayerController playerController) {
@@ -50,7 +51,7 @@ namespace Counter.Logic {
                         return;
                     }
                     counterKitchenObject.DestroySelf();
-                    ChangeState(State.Idle);
+                    ChangeStateServerRpc(State.Idle);
                     return;
                 }
             }
@@ -68,20 +69,21 @@ namespace Counter.Logic {
             counterKitchenObject?.SetParent(playerController);
 
             // Update stove's current recipe
+            UpdateRecipeSOServerRpc(GetRecipeIndex(recipeSO));
             _currentFryingRecipeSO = recipeSO;
             if (recipeSO == null) {
-                ChangeState(State.Idle);
+                ChangeStateServerRpc(State.Idle);
                 return;
             }
 
             // Start the stove
-            var stoveKitchenObjectSO = GetKitchenObject().GetKitchenObjectSO();
+            var stoveKitchenObjectSO = playerKitchenObject?.GetKitchenObjectSO();
             if (stoveKitchenObjectSO == recipeSO.rawKitchenObjectSO) {
                 // Start frying
-                ChangeState(State.Frying);
+                ChangeStateServerRpc(State.Frying);
             } else if (stoveKitchenObjectSO == recipeSO.friedKitchenObjectSO) {
                 // Start burning
-                ChangeState(State.Fried);
+                ChangeStateServerRpc(State.Fried);
             }
         }
 
@@ -91,6 +93,8 @@ namespace Counter.Logic {
 
 
         private void Update() {
+            if (!IsServer) return;
+
             if (_currentFryingRecipeSO is null) return;
 
             switch (_currentState) {
@@ -98,9 +102,9 @@ namespace Counter.Logic {
                     // Do Nothing
                     break;
                 case State.Frying:
-                    IncreaseFryingTime(amount: Time.deltaTime, totalFryingTime: _currentFryingRecipeSO.fryingTime);
-                    if (_fryingTime >= _currentFryingRecipeSO.fryingTime) {
-                        ChangeState(State.Fried);
+                    _fryingTime.Value += Time.deltaTime;
+                    if (_fryingTime.Value >= _currentFryingRecipeSO.fryingTime) {
+                        ChangeStateServerRpc(State.Fried);
                         GetKitchenObject().DestroySelf();
                         KitchenObject.KitchenObject.SpawnKitchenObject(
                             _currentFryingRecipeSO.friedKitchenObjectSO,
@@ -109,9 +113,9 @@ namespace Counter.Logic {
                     }
                     break;
                 case State.Fried:
-                    IncreaseBurningTime(amount: Time.deltaTime, totalBurningTime: _currentFryingRecipeSO.burningTime);
-                    if (_burningTime >= _currentFryingRecipeSO.burningTime) {
-                        ChangeState(State.Burned);
+                    _burningTime.Value += Time.deltaTime;
+                    if (_burningTime.Value >= _currentFryingRecipeSO.burningTime) {
+                        ChangeStateServerRpc(State.Burned);
                         GetKitchenObject().DestroySelf();
                         KitchenObject.KitchenObject.SpawnKitchenObject(
                             _currentFryingRecipeSO.burnedKitchenObjectSO,
@@ -127,34 +131,53 @@ namespace Counter.Logic {
             }
         }
 
+        public override void OnNetworkSpawn() {
+            _fryingTime.OnValueChanged += InvokeOnProgressChanged;
+            _burningTime.OnValueChanged += InvokeOnProgressChanged;
+        }
+
 
         private FryingRecipeSO GetRecipe(KitchenObjectSO kitchenObjectSO) {
             if (kitchenObjectSO == null) return null;
-            return fryingRecipeSOArray.FirstOrDefault(
+            return fryingRecipeListSO.fryingRecipeSOList.FirstOrDefault(
                 cuttingRecipe => cuttingRecipe.rawKitchenObjectSO == kitchenObjectSO ||
                                  cuttingRecipe.friedKitchenObjectSO == kitchenObjectSO
             );
         }
 
-
-        private void IncreaseFryingTime(float amount, float totalFryingTime) {
-            _fryingTime += amount;
-            InvokeOnProgressChanged(_fryingTime / totalFryingTime);
+        private int GetRecipeIndex(FryingRecipeSO fryingRecipeSO) {
+            if (fryingRecipeSO == null) return -1;
+            return fryingRecipeListSO.fryingRecipeSOList.IndexOf(fryingRecipeSO);
         }
 
-        private void IncreaseBurningTime(float amount, float totalBurningTime) {
-            _burningTime += amount;
-            InvokeOnProgressChanged(_burningTime / totalBurningTime);
-        }
 
         private void ResetFryingAndBurningTimes() {
-            _fryingTime = 0;
-            _burningTime = 0;
-            InvokeOnProgressChanged(0f);
+            _fryingTime.Value = 0;
+            _burningTime.Value = 0;
         }
 
-        private void ChangeState(State newState) {
+        private void InvokeOnProgressChanged(float previousValue, float newValue) {
+            var totalTime = _currentState switch {
+                State.Idle or State.Burned => 1,
+                State.Frying => _currentFryingRecipeSO != null ? _currentFryingRecipeSO.fryingTime : 1,
+                State.Fried => _currentFryingRecipeSO != null ? _currentFryingRecipeSO.burningTime : 1,
+                _ => throw new ArgumentOutOfRangeException()
+            };
+            OnProgressChanged?.Invoke(
+                this,
+                new IHasProgress.OnProgressChangedArgs { ProgressNormalized = newValue / totalTime }
+            );
+        }
+
+
+        [ServerRpc(RequireOwnership = false)]
+        private void ChangeStateServerRpc(State newState) {
             ResetFryingAndBurningTimes();
+            ChangeStateClientRpc(newState);
+        }
+
+        [ClientRpc]
+        private void ChangeStateClientRpc(State newState) {
             _currentState = newState;
             OnStateChanged?.Invoke(
                 this,
@@ -162,11 +185,18 @@ namespace Counter.Logic {
             );
         }
 
-        private void InvokeOnProgressChanged(float progressNormalized) {
-            OnProgressChanged?.Invoke(
-                this,
-                new IHasProgress.OnProgressChangedArgs { ProgressNormalized = progressNormalized }
-            );
+        [ServerRpc(RequireOwnership = false)]
+        private void UpdateRecipeSOServerRpc(int index) {
+            UpdateRecipeSOClientRpc(index);
+        }
+
+        [ClientRpc]
+        private void UpdateRecipeSOClientRpc(int index) {
+            try {
+                _currentFryingRecipeSO = fryingRecipeListSO.fryingRecipeSOList[index];
+            } catch (ArgumentOutOfRangeException) {
+                _currentFryingRecipeSO = null;
+            }
         }
     }
 }
