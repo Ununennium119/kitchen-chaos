@@ -29,13 +29,13 @@ namespace UI.PauseMenu {
             _gameManager = GameManager.Instance;
             _optionsMenuUI = OptionsMenuUI.Instance;
 
-            _gameManager.OnPauseToggled += OnPauseToggledAction;
+            _gameManager.OnLocalPauseToggled += OnLocalPauseToggledAction;
 
             gameObject.SetActive(false);
         }
 
 
-        private void OnPauseToggledAction(object sender, GameManager.OnPauseToggledArgs e) {
+        private void OnLocalPauseToggledAction(object sender, GameManager.OnLocalPauseToggledArgs e) {
             if (e.IsGamePaused) {
                 Show();
             } else {

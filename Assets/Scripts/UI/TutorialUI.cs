@@ -26,6 +26,7 @@ namespace UI {
             _inputManager = InputManager.Instance;
 
             _gameManager.OnStateChanged += OnGameStateChangedAction;
+            _gameManager.OnLocalPlayerReadyChanged += OnLocalPlayerReadyChangedAction;
             _inputManager.OnRebind += OnRebindAction;
 
             UpdateInputTexts();
@@ -61,6 +62,12 @@ namespace UI {
             if (e.State == GameManager.State.WaitingToStart) {
                 Show();
             } else {
+                Hide();
+            }
+        }
+
+        private void OnLocalPlayerReadyChangedAction(object sender, GameManager.OnLocalPlayerReadyChangedArgs e) {
+            if (e.IsLocalPlayerReady) {
                 Hide();
             }
         }
