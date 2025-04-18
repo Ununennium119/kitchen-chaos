@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using ScriptableObjects;
+using Unity.Netcode;
 using UnityEngine;
 
 namespace KitchenObject {
@@ -17,6 +18,9 @@ namespace KitchenObject {
 
         [SerializeField, Tooltip("Scriptable object of the kitchen object which can be added to the plate")]
         private KitchenObjectSO[] validKitchenObjects;
+
+        [SerializeField, Tooltip("Scriptable object of the kitchen object list")]
+        private KitchenObjectListSO kitchenObjectListSO;
 
 
         private List<KitchenObjectSO> _kitchenObjectSOList;
@@ -36,17 +40,30 @@ namespace KitchenObject {
             if (!validKitchenObjects.Contains(kitchenObjectSO)) return false;
             if (_kitchenObjectSOList.Contains(kitchenObjectSO)) return false;
 
-            _kitchenObjectSOList.Add(kitchenObjectSO);
-            OnKitchenObjectAdded?.Invoke(
-                this,
-                new OnKitchenObjectAddedArgs { KitchenObjectSOArray = _kitchenObjectSOList.ToArray() }
-            );
+            var kitchenObjectSOIndex = kitchenObjectListSO.kitchenObjectSOList.IndexOf(kitchenObjectSO);
+            AddKitchenObjectSOServerRpc(kitchenObjectSOIndex);
             return true;
         }
 
 
         private void Start() {
             _kitchenObjectSOList = new List<KitchenObjectSO>();
+        }
+
+
+        [ServerRpc(RequireOwnership = false)]
+        private void AddKitchenObjectSOServerRpc(int kitchenObjectSOIndex) {
+            AddKitchenObjectSOClientRpc(kitchenObjectSOIndex);
+        }
+
+        [ClientRpc]
+        private void AddKitchenObjectSOClientRpc(int kitchenObjectSOIndex) {
+            var kitchenObjectSO = kitchenObjectListSO.kitchenObjectSOList[kitchenObjectSOIndex];
+            _kitchenObjectSOList.Add(kitchenObjectSO);
+            OnKitchenObjectAdded?.Invoke(
+                this,
+                new OnKitchenObjectAddedArgs { KitchenObjectSOArray = _kitchenObjectSOList.ToArray() }
+            );
         }
     }
 }

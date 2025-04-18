@@ -1045,6 +1045,7 @@ GameObject:
   - component: {fileID: 5940501284970767961}
   - component: {fileID: -6183203673348067524}
   - component: {fileID: 7981792220880865458}
+  - component: {fileID: 788271150944169384}
   m_Layer: 0
   m_Name: Plate
   m_TagString: Untagged
@@ -1115,6 +1116,19 @@ MonoBehaviour:
   - {fileID: 11400000, guid: ae568d7570d42df469034b8921319d17, type: 2}
   - {fileID: 11400000, guid: f757ea766f9fe0f46b97b5144bf3aa2d, type: 2}
   - {fileID: 11400000, guid: 83244c7fa1c8dd44b82f132665031fb1, type: 2}
+  kitchenObjectListSO: {fileID: 11400000, guid: f18dec20720db2f4a8d6261b83e5ba61, type: 2}
+--- !u!114 &788271150944169384
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8137443943470708987}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 893e88d38d7f2564fb3f428bc2c71a33, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!1 &8532801500519644015
 GameObject:
   m_ObjectHideFlags: 0
