@@ -53,8 +53,6 @@ namespace Player {
         private float speed = 7.5f;
         [SerializeField, Tooltip("The speed of the player's rotation")]
         private float rotationSpeed = 10f;
-        [SerializeField, Tooltip("The height of the player (Used to check collision when moving)")]
-        private float height = 2f;
         [SerializeField, Tooltip("The radius of the player (Used to check collision when moving)")]
         private float radius = 0.7f;
 
@@ -62,11 +60,15 @@ namespace Player {
         [SerializeField, Tooltip("Maximum distance in which player can select and interact with things")]
         private float interactDistance = 2f;
         [SerializeField, Tooltip("The layer of the containers")]
-        private LayerMask counterLayer;
+        private LayerMask counterLayerMask;
+        [SerializeField, Tooltip("The layer of the object which player should collide with")]
+        private LayerMask collisionsLayerMask;
 
         [Header("Other")]
         [SerializeField, Tooltip("The position in which player holds its kitchen object")]
         private Transform holdPoint;
+        [SerializeField, Tooltip("The position in which players are being spawned")]
+        private Vector3[] spawnPositions;
 
 
         private GameManager _gameManager;
@@ -146,6 +148,10 @@ namespace Player {
         }
 
         public override void OnNetworkSpawn() {
+            if (IsServer) {
+                transform.position = spawnPositions[(int)OwnerClientId % spawnPositions.Length];
+            }
+            
             if (!IsOwner) return;
 
             Debug.Log("Setting up PlayerController...");
@@ -153,6 +159,7 @@ namespace Player {
                 Debug.LogError("There is more than one PlayerController in the scene!");
             }
             LocalInstance = this;
+
             OnLocalPlayerNetworkSpawned?.Invoke(this, EventArgs.Empty);
         }
 
@@ -188,12 +195,13 @@ namespace Player {
         }
 
         private bool CanMove(Vector3 movement) {
-            return !Physics.CapsuleCast(
-                point1: transform.position,
-                point2: transform.position + height * Vector3.up,
-                radius: radius,
+            return !Physics.BoxCast(
+                center: transform.position,
+                halfExtents: Vector3.one * radius,
                 direction: movement,
-                maxDistance: speed * Time.deltaTime
+                orientation: Quaternion.identity,
+                maxDistance: speed * Time.deltaTime,
+                layerMask: collisionsLayerMask
             );
         }
 
@@ -203,7 +211,7 @@ namespace Player {
                 transform.forward,
                 out var hitInfo,
                 interactDistance,
-                counterLayer
+                counterLayerMask
             );
             if (!didRaycastHit) {
                 SetSelectedCounter(null);
