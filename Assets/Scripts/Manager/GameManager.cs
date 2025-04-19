@@ -108,6 +108,7 @@ namespace Manager {
             if (IsServer) {
                 _currentCountdownTime.Value = countdownDuration;
                 _currentPlayTime.Value = playDuration;
+                NetworkManager.Singleton.OnClientDisconnectCallback += OnClientDisconnectCallbackAction;
             }
         }
 
@@ -168,6 +169,10 @@ namespace Manager {
             OnPauseToggled?.Invoke(this, new OnPauseToggledArgs { IsGamePaused = newValue });
         }
 
+        private void OnClientDisconnectCallbackAction(ulong clientId) {
+            CheckGamePaused();
+        }
+
 
         [ServerRpc(RequireOwnership = false)]
         private void SetPlayerReadyServerRpc(ServerRpcParams serverRpcParams = default) {
@@ -184,7 +189,11 @@ namespace Manager {
         [ServerRpc(RequireOwnership = false)]
         private void SetGamePausedServerRpc(bool isPaused, ServerRpcParams serverRpcParams = default) {
             _gamePausedDictionary[serverRpcParams.Receive.SenderClientId] = isPaused;
+            CheckGamePaused();
+        }
 
+
+        private void CheckGamePaused() {
             var gamePausedList = NetworkManager.Singleton.ConnectedClientsIds.Select(
                 playerId => _gamePausedDictionary.TryGetValue(playerId, out var isGamePaused) && isGamePaused
             );

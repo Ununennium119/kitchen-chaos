@@ -1,4 +1,5 @@
 ﻿using Manager;
+using Unity.Netcode;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -22,7 +23,10 @@ namespace UI.PauseMenu {
                 _optionsMenuUI.Show(Show);
                 gameObject.SetActive(false);
             });
-            mainMenuButton.onClick.AddListener(() => { SceneLoader.LoadScene(SceneLoader.Scene.MainMenuScene); });
+            mainMenuButton.onClick.AddListener(() => {
+                NetworkManager.Singleton.Shutdown();
+                SceneLoader.LoadScene(SceneLoader.Scene.MainMenuScene);
+            });
         }
 
         private void Start() {

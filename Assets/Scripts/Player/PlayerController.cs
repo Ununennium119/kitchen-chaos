@@ -150,6 +150,7 @@ namespace Player {
         public override void OnNetworkSpawn() {
             if (IsServer) {
                 transform.position = spawnPositions[(int)OwnerClientId % spawnPositions.Length];
+                NetworkManager.Singleton.OnClientDisconnectCallback += OnClientDisconnectCallbackAction;
             }
             
             if (!IsOwner) return;
@@ -245,6 +246,12 @@ namespace Player {
             if (!_gameManager.IsPlaying()) return;
 
             _selectedCounter?.InteractAlternate();
+        }
+
+        private void OnClientDisconnectCallbackAction(ulong clientId) {
+            if (OwnerClientId == clientId) {
+                GetKitchenObject()?.DestroySelf();
+            }
         }
     }
 }
