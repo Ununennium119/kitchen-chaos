@@ -1,4 +1,7 @@
-﻿using KitchenObject;
+﻿using System;
+using System.Threading;
+using KitchenObject;
+using Manager;
 using ScriptableObjects;
 using Unity.Netcode;
 using UnityEngine;
@@ -14,6 +17,9 @@ namespace Multiplayer {
         private KitchenObjectListSO kitchenObjectListSO;
 
 
+        private GameManager _gameManager;
+
+
         /// <summary>
         /// Spawns and adds a kitchen object to the parent by calling a server RPC.
         /// </summary>
@@ -25,6 +31,20 @@ namespace Multiplayer {
         ) {
             var index = GetKitchenObjectSOIndex(kitchenObjectSO);
             SpawnKitchenObjectServerRpc(index, parent.GetNetworkObject());
+        }
+
+        public void StartServer() {
+            NetworkManager.Singleton.ConnectionApprovalCallback = ConnectionApprovalCallback;
+            NetworkManager.Singleton.StartServer();
+        }
+
+        public void StartClient() {
+            NetworkManager.Singleton.StartClient();
+        }
+
+        public void StartHost() {
+            NetworkManager.Singleton.ConnectionApprovalCallback = ConnectionApprovalCallback;
+            NetworkManager.Singleton.StartHost();
         }
 
         /// <summary>
@@ -44,6 +64,10 @@ namespace Multiplayer {
             Instance = this;
         }
 
+        private void Start() {
+            _gameManager = GameManager.Instance;
+        }
+
 
         private int GetKitchenObjectSOIndex(KitchenObjectSO kitchenObjectSO) {
             return kitchenObjectListSO.kitchenObjectSOList.IndexOf(kitchenObjectSO);
@@ -52,6 +76,7 @@ namespace Multiplayer {
         private KitchenObjectSO GetKitchenObjectSO(int kitchenObjectSOIndex) {
             return kitchenObjectListSO.kitchenObjectSOList[kitchenObjectSOIndex];
         }
+
 
         [ServerRpc(RequireOwnership = false)]
         private void SpawnKitchenObjectServerRpc(int index, NetworkObjectReference parentNetworkObjectReference) {
@@ -70,6 +95,20 @@ namespace Multiplayer {
         private void DestroyKitchenObjectServerRpc(NetworkObjectReference kitchenObjectNetworkObjectReference) {
             kitchenObjectNetworkObjectReference.TryGet(out var kitchenObjectNetworkObject);
             kitchenObjectNetworkObject.Despawn();
+        }
+
+
+        private void ConnectionApprovalCallback(
+            NetworkManager.ConnectionApprovalRequest request,
+            NetworkManager.ConnectionApprovalResponse response
+        ) {
+            if (_gameManager.IsWaiting()) {
+                response.Approved = true;
+                response.CreatePlayerObject = true;
+            } else {
+                response.Approved = false;
+            }
+            response.Pending = false;
         }
     }
 }

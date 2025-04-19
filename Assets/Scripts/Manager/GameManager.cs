@@ -83,6 +83,10 @@ namespace Manager {
             OnLocalPauseToggled?.Invoke(this, new OnLocalPauseToggledArgs { IsGamePaused = _isLocalGamePaused });
         }
 
+        public bool IsWaiting() {
+            return _state.Value == State.WaitingToStart;
+        }
+
 
         private void Awake() {
             Debug.Log("Setting up GameManager...");

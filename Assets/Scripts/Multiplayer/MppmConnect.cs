@@ -5,14 +5,14 @@ using Unity.Netcode;
 namespace Multiplayer {
     public class MppmConnect : NetworkBehaviour {
         private void Start() {
+            var multiplayerManager = MultiplayerManager.Instance;
             var mppmTag = CurrentPlayer.ReadOnlyTags();
-            var networkManager = NetworkManager.Singleton;
             if (mppmTag.Contains("Server")) {
-                networkManager.StartServer();
+                multiplayerManager.StartServer();
             } else if (mppmTag.Contains("Host")) {
-                networkManager.StartHost();
+                multiplayerManager.StartHost();
             } else if (mppmTag.Contains("Client")) {
-                networkManager.StartClient();
+                multiplayerManager.StartClient();
             }
         }
     }
