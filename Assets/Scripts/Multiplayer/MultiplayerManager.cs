@@ -62,6 +62,8 @@ namespace Multiplayer {
                 Debug.LogError("There is more than one instance of MultiplayerManager!");
             }
             Instance = this;
+            
+            DontDestroyOnLoad(gameObject);
         }
 
         private void Start() {
@@ -102,13 +104,7 @@ namespace Multiplayer {
             NetworkManager.ConnectionApprovalRequest request,
             NetworkManager.ConnectionApprovalResponse response
         ) {
-            if (_gameManager.IsWaiting()) {
-                response.Approved = true;
-                response.CreatePlayerObject = true;
-            } else {
-                response.Approved = false;
-            }
-            response.Pending = false;
+            response.Approved = true;
         }
     }
 }
