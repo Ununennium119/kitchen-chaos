@@ -2,6 +2,7 @@ using System;
 using Counter.Logic;
 using KitchenObject;
 using Manager;
+using Multiplayer;
 using Unity.Netcode;
 using UnityEngine;
 
@@ -69,10 +70,13 @@ namespace Player {
         private Transform holdPoint;
         [SerializeField, Tooltip("The position in which players are being spawned")]
         private Vector3[] spawnPositions;
+        [SerializeField, Tooltip("The player visual")]
+        private PlayerVisual playerVisual;
 
 
         private GameManager _gameManager;
         private InputManager _inputManager;
+        private MultiplayerManager _multiplayerManager;
         private bool _isWalking;
         private BaseCounter _selectedCounter;
         private KitchenObject.KitchenObject _kitchenObject;
@@ -133,6 +137,10 @@ namespace Player {
 
             _inputManager.OnInteractPerformed += OnInteractPerformedAction;
             _inputManager.OnInteractAlternatePerformed += OnInteractAlternatePerformedAction;
+
+            var playerData = _multiplayerManager.GetPlayerData(OwnerClientId);
+            var color = _multiplayerManager.GetPlayerColor(playerData.ColorIndex);
+            playerVisual.SetColor(color);
         }
 
         private void Update() {
@@ -148,8 +156,10 @@ namespace Player {
         }
 
         public override void OnNetworkSpawn() {
+            _multiplayerManager = MultiplayerManager.Instance;
             if (IsServer) {
-                transform.position = spawnPositions[(int)OwnerClientId % spawnPositions.Length];
+                var playerDataIndex = _multiplayerManager.GetPlayerDataIndex(OwnerClientId);
+                transform.position = spawnPositions[playerDataIndex];
                 NetworkManager.Singleton.OnClientDisconnectCallback += OnClientDisconnectCallbackAction;
             }
             

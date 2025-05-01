@@ -9,11 +9,18 @@ namespace Manager {
         public static CharacterSelectReadyManager Instance { get; private set; }
         
         
+        public event EventHandler OnReadyChanged;
+
+
         private readonly Dictionary<ulong, bool> _playerReadyDictionary = new();
 
 
         public void SetPlayerReady() {
             SetPlayerReadyServerRpc();
+        }
+
+        public bool IsPlayerReady(ulong clientId) {
+            return _playerReadyDictionary.GetValueOrDefault(clientId, false);
         }
 
 
@@ -24,11 +31,13 @@ namespace Manager {
             }
             Instance = this;
         }
-        
+
 
         [ServerRpc(RequireOwnership = false)]
         private void SetPlayerReadyServerRpc(ServerRpcParams serverRpcParams = default) {
-            _playerReadyDictionary[serverRpcParams.Receive.SenderClientId] = true;
+            var clientId = serverRpcParams.Receive.SenderClientId;
+            _playerReadyDictionary[clientId] = true;
+            SetPlayerReadyClientRpc(clientId);
 
             var playerReadyList = NetworkManager.Singleton.ConnectedClientsIds.Select(
                 playerId => _playerReadyDictionary.TryGetValue(playerId, out var isReady) && isReady
@@ -36,6 +45,12 @@ namespace Manager {
             if (playerReadyList.All(isPlayerReady => isPlayerReady)) {
                 SceneLoader.LoadNetwork(SceneLoader.Scene.GameScene);
             }
+        }
+
+        [ClientRpc]
+        private void SetPlayerReadyClientRpc(ulong clientId) {
+            _playerReadyDictionary[clientId] = true;
+            OnReadyChanged?.Invoke(this, EventArgs.Empty);
         }
     }
 }

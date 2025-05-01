@@ -1,7 +1,7 @@
 ﻿using System;
-using System.Threading;
+using System.Collections.Generic;
 using KitchenObject;
-using Manager;
+using Player;
 using ScriptableObjects;
 using Unity.Netcode;
 using UnityEngine;
@@ -18,13 +18,17 @@ namespace Multiplayer {
 
         public event EventHandler OnTryingToJoin;
         public event EventHandler OnFailedToJoin;
+        public event EventHandler OnPlayerDataListChanged;
 
 
         [SerializeField, Tooltip("List of kitchen object scriptable objects")]
         private KitchenObjectListSO kitchenObjectListSO;
 
+        [SerializeField, Tooltip("List of player colors")]
+        private List<Color> playerColors = new();
 
-        private GameManager _gameManager;
+
+        private readonly NetworkList<PlayerData> _playerDataList = new();
 
 
         /// <summary>
@@ -53,6 +57,8 @@ namespace Multiplayer {
 
         public void StartHost() {
             NetworkManager.Singleton.ConnectionApprovalCallback = ConnectionApprovalCallback;
+            NetworkManager.Singleton.OnClientConnectedCallback += HostOnClientConnectedCallback;
+            NetworkManager.Singleton.OnClientDisconnectCallback += HostOnClientDisconnectCallbackAction;
             NetworkManager.Singleton.StartHost();
         }
 
@@ -65,6 +71,52 @@ namespace Multiplayer {
         }
 
 
+        public bool HasPlayerData(int index) {
+            return index >= 0 && _playerDataList.Count > index;
+        }
+
+        public PlayerData GetPlayerData(int index) {
+            return _playerDataList[index];
+        }
+
+        public PlayerData GetPlayerData(ulong clientId) {
+            foreach (var playerData in _playerDataList) {
+                if (playerData.ClientId == clientId) {
+                    return playerData;
+                }
+            }
+            return default;
+        }
+
+        public int GetPlayerDataIndex(ulong clientId) {
+            for (var i = 0; i < _playerDataList.Count; i++) {
+                if (_playerDataList[i].ClientId == clientId) {
+                    return i;
+                }
+            }
+            return -1;
+        }
+
+        public PlayerData GetLocalPlayerData() {
+            return GetPlayerData(NetworkManager.Singleton.LocalClientId);
+        }
+
+
+        public Color GetPlayerColor(int colorIndex) {
+            return playerColors[colorIndex];
+        }
+
+        public void ChangePlayerColor(int colorIndex) {
+            ChangePlayerColorServerRpc(colorIndex, new ServerRpcParams());
+        }
+
+
+        public void KickPlayer(ulong clientId) {
+            NetworkManager.Singleton.DisconnectClient(clientId);
+            HostOnClientDisconnectCallbackAction(clientId);
+        }
+
+
         private void Awake() {
             Debug.Log("Setting up MultiplayerManager");
             if (Instance != null) {
@@ -72,11 +124,9 @@ namespace Multiplayer {
             }
             Instance = this;
 
-            DontDestroyOnLoad(gameObject);
-        }
+            _playerDataList.OnListChanged += OnPlayerDataListChangedAction;
 
-        private void Start() {
-            _gameManager = GameManager.Instance;
+            DontDestroyOnLoad(gameObject);
         }
 
 
@@ -86,6 +136,25 @@ namespace Multiplayer {
 
         private KitchenObjectSO GetKitchenObjectSO(int kitchenObjectSOIndex) {
             return kitchenObjectListSO.kitchenObjectSOList[kitchenObjectSOIndex];
+        }
+
+
+        private bool IsColorAvailable(int colorIndex) {
+            foreach (var playerData in _playerDataList) {
+                if (playerData.ColorIndex == colorIndex) {
+                    return false;
+                }
+            }
+            return true;
+        }
+
+        private int GetFirstAvailableColor() {
+            for (var i = 0; i < playerColors.Count; i++) {
+                if (IsColorAvailable(i)) {
+                    return i;
+                }
+            }
+            return -1;
         }
 
 
@@ -109,6 +178,17 @@ namespace Multiplayer {
         }
 
 
+        [ServerRpc(RequireOwnership = false)]
+        private void ChangePlayerColorServerRpc(int colorIndex, ServerRpcParams serverRpcParams) {
+            if (!IsColorAvailable(colorIndex)) return;
+
+            var playerDataIndex = GetPlayerDataIndex(serverRpcParams.Receive.SenderClientId);
+            var playerData = _playerDataList[playerDataIndex];
+            playerData.ColorIndex = colorIndex;
+            _playerDataList[playerDataIndex] = playerData;
+        }
+
+
         private void ConnectionApprovalCallback(
             NetworkManager.ConnectionApprovalRequest request,
             NetworkManager.ConnectionApprovalResponse response
@@ -126,9 +206,28 @@ namespace Multiplayer {
             response.Approved = true;
         }
 
-
         private void OnClientDisconnectCallbackAction(ulong clientId) {
             OnFailedToJoin?.Invoke(this, EventArgs.Empty);
+        }
+
+        private void HostOnClientConnectedCallback(ulong clientId) {
+            _playerDataList.Add(
+                new PlayerData {
+                    ClientId = clientId,
+                    ColorIndex = GetFirstAvailableColor()
+                }
+            );
+        }
+
+        private void HostOnClientDisconnectCallbackAction(ulong clientId) {
+            var playerDataIndex = GetPlayerDataIndex(clientId);
+            if (playerDataIndex == -1) return;
+            _playerDataList.RemoveAt(playerDataIndex);
+        }
+
+
+        private void OnPlayerDataListChangedAction(NetworkListEvent<PlayerData> changeEvent) {
+            OnPlayerDataListChanged?.Invoke(this, EventArgs.Empty);
         }
     }
 }

@@ -79,7 +79,6 @@ MonoBehaviour:
   ShowTopMostFoldoutHeaderGroup: 1
   speed: 7.5
   rotationSpeed: 16
-  height: 2
   radius: 0.7
   interactDistance: 2
   counterLayerMask:
@@ -94,6 +93,7 @@ MonoBehaviour:
   - {x: 1, y: 0, z: 1}
   - {x: -1, y: 0, z: -1}
   - {x: 1, y: 0, z: -1}
+  playerVisual: {fileID: 60549620244097535}
 --- !u!114 &5262730608560224007
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -327,6 +327,17 @@ PrefabInstance:
       insertIndex: -1
       addedObject: {fileID: 8574188593167718820}
   m_SourcePrefab: {fileID: 100100000, guid: 1c5dda3c7cd3cf742afcade5419faeab, type: 3}
+--- !u!114 &60549620244097535 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 2376369344594643414, guid: 1c5dda3c7cd3cf742afcade5419faeab, type: 3}
+  m_PrefabInstance: {fileID: 2318670852500889641}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 978626884150955022}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 59fc8e19fcab43ed882f6ef8d3529b61, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!4 &978626884150955021 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 3294758251327466532, guid: 1c5dda3c7cd3cf742afcade5419faeab, type: 3}
