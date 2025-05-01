@@ -29,4 +29,9 @@ public static class SceneLoader {
     public static void LoadSceneCallback() {
         SceneManager.LoadScene(_targetScene.ToString());
     }
+
+
+    public static bool IsSceneActive(Scene scene) {
+        return SceneManager.GetActiveScene().name == scene.ToString();
+    }
 }

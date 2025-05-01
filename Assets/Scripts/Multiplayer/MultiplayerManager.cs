@@ -10,7 +10,14 @@ namespace Multiplayer {
     /// <summary>This class is responsible for handling multiplayer logic like spawning and syncing.</summary>
     /// <remarks>This class is singleton.</remarks>
     public class MultiplayerManager : NetworkBehaviour {
+        private const int MAX_PLAYER_COUNT = 4;
+
+
         public static MultiplayerManager Instance { get; private set; }
+
+
+        public event EventHandler OnTryingToJoin;
+        public event EventHandler OnFailedToJoin;
 
 
         [SerializeField, Tooltip("List of kitchen object scriptable objects")]
@@ -39,6 +46,8 @@ namespace Multiplayer {
         }
 
         public void StartClient() {
+            OnTryingToJoin?.Invoke(this, EventArgs.Empty);
+            NetworkManager.Singleton.OnClientDisconnectCallback += OnClientDisconnectCallbackAction;
             NetworkManager.Singleton.StartClient();
         }
 
@@ -62,7 +71,7 @@ namespace Multiplayer {
                 Debug.LogError("There is more than one instance of MultiplayerManager!");
             }
             Instance = this;
-            
+
             DontDestroyOnLoad(gameObject);
         }
 
@@ -104,7 +113,22 @@ namespace Multiplayer {
             NetworkManager.ConnectionApprovalRequest request,
             NetworkManager.ConnectionApprovalResponse response
         ) {
+            if (!SceneLoader.IsSceneActive(SceneLoader.Scene.CharacterSelectScene)) {
+                response.Approved = false;
+                response.Reason = "Game started already!";
+                return;
+            }
+            if (NetworkManager.Singleton.ConnectedClientsIds.Count >= MAX_PLAYER_COUNT) {
+                response.Approved = false;
+                response.Reason = "Game is full!";
+                return;
+            }
             response.Approved = true;
+        }
+
+
+        private void OnClientDisconnectCallbackAction(ulong clientId) {
+            OnFailedToJoin?.Invoke(this, EventArgs.Empty);
         }
     }
 }

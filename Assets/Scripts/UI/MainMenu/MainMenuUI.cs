@@ -12,7 +12,7 @@ namespace UI.MainMenu {
 
 
         private void Awake() {
-            playButton.onClick.AddListener(() => { SceneLoader.LoadScene(SceneLoader.Scene.GameScene); });
+            playButton.onClick.AddListener(() => { SceneLoader.LoadScene(SceneLoader.Scene.LobbyScene); });
             quitButton.onClick.AddListener(Application.Quit);
 
             // Resetting (setting to null) all static objects used when loading main menu

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using Unity.Netcode;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 
 namespace Manager {
     /// <summary>This class is responsible for managing game state.</summary>
@@ -40,6 +41,9 @@ namespace Manager {
         }
 
 
+        [SerializeField, Tooltip("The player prefab")]
+        private Transform playerPrefab;
+        
         [SerializeField, Tooltip("Duration of countdown")]
         private float countdownDuration = 3f;
         [SerializeField, Tooltip("Duration of game in \"Playing\" state")]
@@ -113,6 +117,7 @@ namespace Manager {
                 _currentCountdownTime.Value = countdownDuration;
                 _currentPlayTime.Value = playDuration;
                 NetworkManager.Singleton.OnClientDisconnectCallback += OnClientDisconnectCallbackAction;
+                NetworkManager.Singleton.SceneManager.OnLoadEventCompleted += OnLoadEventCompletedAction;
             }
         }
 
@@ -177,6 +182,17 @@ namespace Manager {
             CheckGamePaused();
         }
 
+        private void OnLoadEventCompletedAction(
+            string sceneName,
+            LoadSceneMode loadSceneMode,
+            List<ulong> clientsCompleted,
+            List<ulong> clientsTimedOut
+        ) {
+            foreach (var clientId in NetworkManager.Singleton.ConnectedClientsIds) {
+                var playerTransform = Instantiate(playerPrefab);
+                playerTransform.GetComponent<NetworkObject>().SpawnAsPlayerObject(clientId, true);
+            }
+        }
 
         [ServerRpc(RequireOwnership = false)]
         private void SetPlayerReadyServerRpc(ServerRpcParams serverRpcParams = default) {
