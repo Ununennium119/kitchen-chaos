@@ -18,6 +18,10 @@ namespace UI {
             Hide();
         }
 
+        public override void OnDestroy() {
+            NetworkManager.Singleton.OnClientDisconnectCallback -= OnClientDisconnectCallback;
+        }
+
 
         private void Show() {
             gameObject.SetActive(true);

@@ -1,16 +1,18 @@
 ﻿using System;
 using System.Collections.Generic;
 using KitchenObject;
+using Manager;
 using Player;
 using ScriptableObjects;
 using Unity.Netcode;
+using Unity.Services.Authentication;
 using UnityEngine;
 
 namespace Multiplayer {
     /// <summary>This class is responsible for handling multiplayer logic like spawning and syncing.</summary>
     /// <remarks>This class is singleton.</remarks>
     public class MultiplayerManager : NetworkBehaviour {
-        private const int MAX_PLAYER_COUNT = 4;
+        public const int MAX_PLAYER_COUNT = 4;
 
 
         public static MultiplayerManager Instance { get; private set; }
@@ -51,6 +53,7 @@ namespace Multiplayer {
 
         public void StartClient() {
             OnTryingToJoin?.Invoke(this, EventArgs.Empty);
+            NetworkManager.Singleton.OnClientConnectedCallback += OnClientConnectedCallbackAction;
             NetworkManager.Singleton.OnClientDisconnectCallback += OnClientDisconnectCallbackAction;
             NetworkManager.Singleton.StartClient();
         }
@@ -188,6 +191,15 @@ namespace Multiplayer {
             _playerDataList[playerDataIndex] = playerData;
         }
 
+        [ServerRpc(RequireOwnership = false)]
+        private void ChangePlayerNameAndIdServerRpc(string playerName, string playerId, ServerRpcParams serverRpcParams) {
+            var playerDataIndex = GetPlayerDataIndex(serverRpcParams.Receive.SenderClientId);
+            var playerData = _playerDataList[playerDataIndex];
+            playerData.Name = playerName;
+            playerData.PlayerId = playerId;
+            _playerDataList[playerDataIndex] = playerData;
+        }
+
 
         private void ConnectionApprovalCallback(
             NetworkManager.ConnectionApprovalRequest request,
@@ -206,6 +218,14 @@ namespace Multiplayer {
             response.Approved = true;
         }
 
+        private void OnClientConnectedCallbackAction(ulong clientId) {
+            ChangePlayerNameAndIdServerRpc(
+                PlayerPrefsManager.GetPlayerName(),
+                AuthenticationService.Instance.PlayerId,
+                new ServerRpcParams()
+            );
+        }
+
         private void OnClientDisconnectCallbackAction(ulong clientId) {
             OnFailedToJoin?.Invoke(this, EventArgs.Empty);
         }
@@ -217,6 +237,13 @@ namespace Multiplayer {
                     ColorIndex = GetFirstAvailableColor()
                 }
             );
+            if (clientId == NetworkManager.Singleton.LocalClientId) {
+                ChangePlayerNameAndIdServerRpc(
+                    PlayerPrefsManager.GetPlayerName(),
+                    AuthenticationService.Instance.PlayerId,
+                    new ServerRpcParams()
+                );
+            }
         }
 
         private void HostOnClientDisconnectCallbackAction(ulong clientId) {

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using Multiplayer;
 using Unity.Netcode;
 using UnityEngine;
 
@@ -12,6 +13,7 @@ namespace Manager {
         public event EventHandler OnReadyChanged;
 
 
+        private LobbyManager _lobbyManager;
         private readonly Dictionary<ulong, bool> _playerReadyDictionary = new();
 
 
@@ -32,6 +34,10 @@ namespace Manager {
             Instance = this;
         }
 
+        private void Start() {
+            _lobbyManager = LobbyManager.Instance;
+        }
+
 
         [ServerRpc(RequireOwnership = false)]
         private void SetPlayerReadyServerRpc(ServerRpcParams serverRpcParams = default) {
@@ -43,6 +49,7 @@ namespace Manager {
                 playerId => _playerReadyDictionary.TryGetValue(playerId, out var isReady) && isReady
             );
             if (playerReadyList.All(isPlayerReady => isPlayerReady)) {
+                _lobbyManager.DeleteLobby();
                 SceneLoader.LoadNetwork(SceneLoader.Scene.GameScene);
             }
         }

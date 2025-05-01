@@ -34,6 +34,10 @@ namespace UI.CharacterSelect {
             UpdateIsSelected();
         }
 
+        private void OnDestroy() {
+            _multiplayerManager.OnPlayerDataListChanged -= OnPlayerDataListChangedAction;
+        }
+
 
         private void UpdateIsSelected() {
             var isSelected = _multiplayerManager.GetLocalPlayerData().ColorIndex == colorIndex;

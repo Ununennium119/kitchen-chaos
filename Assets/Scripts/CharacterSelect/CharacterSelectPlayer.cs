@@ -2,6 +2,7 @@
 using Manager;
 using Multiplayer;
 using Player;
+using TMPro;
 using Unity.Netcode;
 using UnityEngine;
 using UnityEngine.UI;
@@ -14,6 +15,9 @@ namespace CharacterSelect {
         [SerializeField, Tooltip("The ready game object")]
         private GameObject readyGameObject;
 
+        [SerializeField, Tooltip("The player name text")]
+        private TextMeshPro nameText;
+
         [SerializeField, Tooltip("The player visual")]
         private PlayerVisual playerVisual;
 
@@ -22,19 +26,21 @@ namespace CharacterSelect {
 
 
         private MultiplayerManager _multiplayerManager;
+        private LobbyManager _lobbyManager;
         private CharacterSelectReadyManager _characterSelectReadyManager;
 
 
         private void Awake() {
             kickButton.onClick.AddListener(() => {
                 var playerData = _multiplayerManager.GetPlayerData(index);
-                Debug.Log($"Kicking {playerData.ClientId}");
+                _lobbyManager.KickPlayer(playerData.PlayerId.ToString());
                 _multiplayerManager.KickPlayer(playerData.ClientId);
             });
         }
-
+    
         private void Start() {
             _multiplayerManager = MultiplayerManager.Instance;
+            _lobbyManager = LobbyManager.Instance;
             _characterSelectReadyManager = CharacterSelectReadyManager.Instance;
 
             _multiplayerManager.OnPlayerDataListChanged += OnPlayerDataListChangedAction;
@@ -62,6 +68,7 @@ namespace CharacterSelect {
             if (!isActive) return;
 
             var playerData = _multiplayerManager.GetPlayerData(index);
+            nameText.text = playerData.Name.ToString();
             var color = _multiplayerManager.GetPlayerColor(playerData.ColorIndex);
             playerVisual.SetColor(color);
         }

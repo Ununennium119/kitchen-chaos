@@ -11,6 +11,9 @@ namespace Manager {
             if (MultiplayerManager.Instance != null) {
                 Destroy(MultiplayerManager.Instance.gameObject);
             }
+            if (LobbyManager.Instance != null) {
+                Destroy(LobbyManager.Instance.gameObject);
+            }
         }
     }
 }
