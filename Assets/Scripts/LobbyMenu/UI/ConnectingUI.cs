@@ -1,5 +1,6 @@
 ﻿using System;
-using Multiplayer;
+using Common;
+using Common.Logic;
 using UnityEngine;
 
 namespace LobbyMenu.UI {

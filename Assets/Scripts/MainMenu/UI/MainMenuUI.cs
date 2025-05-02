@@ -1,5 +1,7 @@
-﻿using Counter.Logic;
-using Player;
+﻿using Common;
+using Common.Logic;
+using Game.Counter.Logic;
+using Game.Player;
 using UnityEngine;
 using UnityEngine.UI;
 
