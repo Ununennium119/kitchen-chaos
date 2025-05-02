@@ -26,6 +26,7 @@ namespace UI {
             _inputManager = InputManager.Instance;
 
             _gameManager.OnStateChanged += OnGameStateChangedAction;
+            _gameManager.OnLocalPlayerReadyChanged += OnLocalPlayerReadyChangedAction;
             _inputManager.OnRebind += OnRebindAction;
 
             UpdateInputTexts();
@@ -49,7 +50,8 @@ namespace UI {
             keyboardAlternativeInteractText.text =
                 _inputManager.GetPlayerBindingDisplayString(InputManager.Binding.AlternativeInteract);
             keyboardPauseText.text = _inputManager.GetPlayerBindingDisplayString(InputManager.Binding.Pause);
-            gamepadInteractText.text = _inputManager.GetPlayerBindingDisplayString(InputManager.Binding.GamepadInteract);
+            gamepadInteractText.text =
+                _inputManager.GetPlayerBindingDisplayString(InputManager.Binding.GamepadInteract);
             gamepadAlternativeInteractText.text =
                 _inputManager.GetPlayerBindingDisplayString(InputManager.Binding.GamepadAlternativeInteract);
             gamepadPauseText.text = _inputManager.GetPlayerBindingDisplayString(InputManager.Binding.GamepadPause);
@@ -60,6 +62,12 @@ namespace UI {
             if (e.State == GameManager.State.WaitingToStart) {
                 Show();
             } else {
+                Hide();
+            }
+        }
+
+        private void OnLocalPlayerReadyChangedAction(object sender, GameManager.OnLocalPlayerReadyChangedArgs e) {
+            if (e.IsLocalPlayerReady) {
                 Hide();
             }
         }

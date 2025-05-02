@@ -8,7 +8,8 @@ namespace Manager {
     public static class PlayerPrefsManager {
         private const string PLAYER_PREFS_MUSIC_VOLUME = "MusicVolume";
         private const string PLAYER_PREFS_SOUND_EFFECTS_VOLUME = "SoundEffectsVolume";
-        private const string PLAYER_PREFS_BINDINGS = "BINDINGS";
+        private const string PLAYER_PREFS_BINDINGS = "Bindings";
+        private const string PLAYER_PREFS_NAME = "Name";
 
 
         public static float GetMusicVolume(float defaultValue) {
@@ -42,6 +43,15 @@ namespace Manager {
 
         public static bool HasPlayerBindingsJsonString() {
             return PlayerPrefs.HasKey(PLAYER_PREFS_BINDINGS);
+        }
+
+
+        public static string GetPlayerName() {
+            return PlayerPrefs.GetString(PLAYER_PREFS_NAME, $"Player{Random.Range(100000, 999999)}");
+        }
+
+        public static void SetPlayerName(string name) {
+            PlayerPrefs.SetString(PLAYER_PREFS_NAME, name);
         }
     }
 }

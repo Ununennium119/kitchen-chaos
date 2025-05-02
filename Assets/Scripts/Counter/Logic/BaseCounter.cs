@@ -1,10 +1,11 @@
 ﻿using System;
 using KitchenObject;
 using Player;
+using Unity.Netcode;
 using UnityEngine;
 
 namespace Counter.Logic {
-    public class BaseCounter : MonoBehaviour, IKitchenObjectParent {
+    public class BaseCounter : NetworkBehaviour, IKitchenObjectParent {
         [SerializeField, Tooltip("The position in which the kitchen object is placed in the scene")]
         private Transform counterTopPoint;
 
@@ -58,6 +59,12 @@ namespace Counter.Logic {
         /// <remark>Implementation of <see cref="IKitchenObjectParent.HasKitchenObject"/>.</remark>
         public bool HasKitchenObject() {
             return _kitchenObject is not null;
+        }
+
+        /// <inheritdoc cref="IKitchenObjectParent.GetNetworkObject"/>
+        /// <remark>Implementation of <see cref="IKitchenObjectParent.GetNetworkObject"/>.</remark>
+        public NetworkObjectReference GetNetworkObject() {
+            return NetworkObject;
         }
     }
 }

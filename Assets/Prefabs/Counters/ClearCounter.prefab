@@ -8,6 +8,10 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 0}
     m_Modifications:
+    - target: {fileID: -1712079768730875196, guid: 836ffac803b43eb44ae4bb914af908c1, type: 3}
+      propertyPath: GlobalObjectIdHash
+      value: 1645000918
+      objectReference: {fileID: 0}
     - target: {fileID: 3387558104430604392, guid: 836ffac803b43eb44ae4bb914af908c1, type: 3}
       propertyPath: m_LocalPosition.x
       value: 0
@@ -93,8 +97,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 8920f9ef13f7fb840a36d3076b96e830, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  ShowTopMostFoldoutHeaderGroup: 1
   counterTopPoint: {fileID: 3560917196254054941}
-  kitchenObjectScriptable: {fileID: 11400000, guid: d726f263e7671434a8546eb44a427a98, type: 2}
 --- !u!1001 &6494334569993453790
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -268,6 +272,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: ac45f00d8fd7a7548b2813aee1e9f375, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  ShowTopMostFoldoutHeaderGroup: 1
   counter: {fileID: -5117161670324617625}
   visualGameObjects:
   - {fileID: 1249475974953795144}

@@ -1,4 +1,5 @@
-﻿using System.Linq;
+﻿using System;
+using System.Linq;
 using Manager;
 using UnityEngine;
 
@@ -29,11 +30,11 @@ namespace UI.HUD {
         }
 
 
-        private void OnOrderSpawnedAction(object sender, System.EventArgs e) {
+        private void OnOrderSpawnedAction(object sender, EventArgs e) {
             UpdateOrders();
         }
 
-        private void OnOrderDeSpawnedAction(object sender, System.EventArgs e) {
+        private void OnOrderDeSpawnedAction(object sender, EventArgs e) {
             UpdateOrders();
         }
 

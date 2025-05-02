@@ -1,5 +1,4 @@
 ﻿using System;
-using Counter;
 using Counter.Logic;
 using UnityEngine;
 
@@ -9,7 +8,8 @@ namespace UI.WorldSpace {
         private static readonly int ShowHide = Animator.StringToHash("ShowHide");
 
 
-        [SerializeField, Tooltip("The related delivery counter")] private DeliveryCounter deliveryCounter;
+        [SerializeField, Tooltip("The related delivery counter")]
+        private DeliveryCounter deliveryCounter;
 
 
         private Animator _animator;

@@ -1,14 +1,43 @@
 using System;
-using Counter;
 using Counter.Logic;
 using KitchenObject;
 using Manager;
+using Multiplayer;
+using Unity.Netcode;
 using UnityEngine;
 
 namespace Player {
-    /// <remarks>This class is singleton.</remarks>
-    public class PlayerController : MonoBehaviour, IKitchenObjectParent {
-        public static PlayerController Instance { get; private set; }
+    /// <remarks>There is only one player controller per player.</remarks>
+    public class PlayerController : NetworkBehaviour, IKitchenObjectParent {
+        public static PlayerController LocalInstance { get; private set; }
+
+        /// <summary>
+        /// This event is invoked whenever the local player network is spawned.
+        /// </summary>
+        public static event EventHandler OnLocalPlayerNetworkSpawned;
+
+        /// <summary>
+        /// This event is invoked whenever any player picks up an object.
+        /// </summary>
+        public static event EventHandler<OnAnyObjectPickupArgs> OnAnyObjectPickup;
+        public class OnAnyObjectPickupArgs : EventArgs {
+            public Vector3 Position;
+        }
+
+        /// <summary>
+        /// This event is invoked whenever any player drops an object.
+        /// </summary>
+        public static event EventHandler<OnAnyObjectDropArgs> OnAnyObjectDrop;
+        public class OnAnyObjectDropArgs : EventArgs {
+            public Vector3 Position;
+        }
+
+
+        public static void ResetStaticObjects() {
+            OnLocalPlayerNetworkSpawned = null;
+            OnAnyObjectPickup = null;
+            OnAnyObjectDrop = null;
+        }
 
 
         /// <summary>
@@ -19,24 +48,12 @@ namespace Player {
             public BaseCounter SelectedCounter;
         }
 
-        /// <summary>
-        /// This event is invoked whenever player picks up an object.
-        /// </summary>
-        public event EventHandler OnObjectPickup;
-
-        /// <summary>
-        /// This event is invoked whenever player drops an object.
-        /// </summary>
-        public event EventHandler OnObjectDrop;
-
 
         [Header("Movement")]
         [SerializeField, Tooltip("The speed of the player's movement")]
         private float speed = 7.5f;
         [SerializeField, Tooltip("The speed of the player's rotation")]
         private float rotationSpeed = 10f;
-        [SerializeField, Tooltip("The height of the player (Used to check collision when moving)")]
-        private float height = 2f;
         [SerializeField, Tooltip("The radius of the player (Used to check collision when moving)")]
         private float radius = 0.7f;
 
@@ -44,15 +61,22 @@ namespace Player {
         [SerializeField, Tooltip("Maximum distance in which player can select and interact with things")]
         private float interactDistance = 2f;
         [SerializeField, Tooltip("The layer of the containers")]
-        private LayerMask counterLayer;
+        private LayerMask counterLayerMask;
+        [SerializeField, Tooltip("The layer of the object which player should collide with")]
+        private LayerMask collisionsLayerMask;
 
         [Header("Other")]
         [SerializeField, Tooltip("The position in which player holds its kitchen object")]
         private Transform holdPoint;
+        [SerializeField, Tooltip("The position in which players are being spawned")]
+        private Vector3[] spawnPositions;
+        [SerializeField, Tooltip("The player visual")]
+        private PlayerVisual playerVisual;
 
 
         private GameManager _gameManager;
         private InputManager _inputManager;
+        private MultiplayerManager _multiplayerManager;
         private bool _isWalking;
         private BaseCounter _selectedCounter;
         private KitchenObject.KitchenObject _kitchenObject;
@@ -80,7 +104,7 @@ namespace Player {
         /// <remark>Implementation of <see cref="IKitchenObjectParent.SetKitchenObject"/>.</remark>
         public void SetKitchenObject(KitchenObject.KitchenObject kitchenObject) {
             if (kitchenObject is not null) {
-                OnObjectPickup?.Invoke(this, EventArgs.Empty);
+                OnAnyObjectPickup?.Invoke(this, new OnAnyObjectPickupArgs { Position = transform.position });
             }
             _kitchenObject = kitchenObject;
         }
@@ -89,7 +113,7 @@ namespace Player {
         /// <remark>Implementation of <see cref="IKitchenObjectParent.ClearKitchenObject"/>.</remark>
         public void ClearKitchenObject() {
             if (_kitchenObject is not null) {
-                OnObjectDrop?.Invoke(this, EventArgs.Empty);
+                OnAnyObjectDrop?.Invoke(this, new OnAnyObjectDropArgs { Position = transform.position });
             }
             _kitchenObject = null;
         }
@@ -100,14 +124,12 @@ namespace Player {
             return _kitchenObject is not null;
         }
 
-
-        private void Awake() {
-            Debug.Log("Setting up PlayerController...");
-            if (Instance != null) {
-                Debug.LogError("There is more than one PlayerController in the scene!");
-            }
-            Instance = this;
+        /// <inheritdoc cref="IKitchenObjectParent.GetNetworkObject"/>
+        /// <remark>Implementation of <see cref="IKitchenObjectParent.GetNetworkObject"/>.</remark>
+        public NetworkObjectReference GetNetworkObject() {
+            return NetworkObject;
         }
+
 
         private void Start() {
             _gameManager = GameManager.Instance;
@@ -115,9 +137,15 @@ namespace Player {
 
             _inputManager.OnInteractPerformed += OnInteractPerformedAction;
             _inputManager.OnInteractAlternatePerformed += OnInteractAlternatePerformedAction;
+
+            var playerData = _multiplayerManager.GetPlayerData(OwnerClientId);
+            var color = _multiplayerManager.GetPlayerColor(playerData.ColorIndex);
+            playerVisual.SetColor(color);
         }
 
         private void Update() {
+            if (!IsOwner) return;
+
             // Calculate movement direction and update walking
             var movementVector = _inputManager.GetPlayerMovementVectorNormalized();
             var movementDirection = new Vector3(movementVector.x, 0, movementVector.y);
@@ -125,6 +153,25 @@ namespace Player {
 
             HandleMovement(movementDirection);
             UpdateSelectedCounter();
+        }
+
+        public override void OnNetworkSpawn() {
+            _multiplayerManager = MultiplayerManager.Instance;
+            if (IsServer) {
+                var playerDataIndex = _multiplayerManager.GetPlayerDataIndex(OwnerClientId);
+                transform.position = spawnPositions[playerDataIndex];
+                NetworkManager.Singleton.OnClientDisconnectCallback += OnClientDisconnectCallbackAction;
+            }
+            
+            if (!IsOwner) return;
+
+            Debug.Log("Setting up PlayerController...");
+            if (LocalInstance != null) {
+                Debug.LogError("There is more than one PlayerController in the scene!");
+            }
+            LocalInstance = this;
+
+            OnLocalPlayerNetworkSpawned?.Invoke(this, EventArgs.Empty);
         }
 
 
@@ -159,12 +206,13 @@ namespace Player {
         }
 
         private bool CanMove(Vector3 movement) {
-            return !Physics.CapsuleCast(
-                point1: transform.position,
-                point2: transform.position + height * Vector3.up,
-                radius: radius,
+            return !Physics.BoxCast(
+                center: transform.position,
+                halfExtents: Vector3.one * radius,
                 direction: movement,
-                maxDistance: speed * Time.deltaTime
+                orientation: Quaternion.identity,
+                maxDistance: speed * Time.deltaTime,
+                layerMask: collisionsLayerMask
             );
         }
 
@@ -174,7 +222,7 @@ namespace Player {
                 transform.forward,
                 out var hitInfo,
                 interactDistance,
-                counterLayer
+                counterLayerMask
             );
             if (!didRaycastHit) {
                 SetSelectedCounter(null);
@@ -208,6 +256,12 @@ namespace Player {
             if (!_gameManager.IsPlaying()) return;
 
             _selectedCounter?.InteractAlternate();
+        }
+
+        private void OnClientDisconnectCallbackAction(ulong clientId) {
+            if (OwnerClientId == clientId) {
+                GetKitchenObject()?.DestroySelf();
+            }
         }
     }
 }

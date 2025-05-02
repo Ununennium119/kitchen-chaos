@@ -1,5 +1,5 @@
-﻿using Counter;
-using Counter.Logic;
+﻿using Counter.Logic;
+using Player;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -12,12 +12,13 @@ namespace UI.MainMenu {
 
 
         private void Awake() {
-            playButton.onClick.AddListener(() => { SceneLoader.LoadScene(SceneLoader.Scene.GameScene); });
+            playButton.onClick.AddListener(() => { SceneLoader.LoadScene(SceneLoader.Scene.LobbyScene); });
             quitButton.onClick.AddListener(Application.Quit);
 
             // Resetting (setting to null) all static objects used when loading main menu
             TrashCounter.ResetStaticObjects();
             CuttingCounter.ResetStaticObjects();
+            PlayerController.ResetStaticObjects();
 
             // Resetting time scale
             Time.timeScale = 1f;

@@ -1,26 +1,27 @@
+using Unity.Netcode;
 using UnityEngine;
 
 namespace Player {
     [RequireComponent(typeof(Animator))]
-    public class PlayerAnimator : MonoBehaviour {
+    public class PlayerAnimator : NetworkBehaviour {
         private static readonly int IsWalking = Animator.StringToHash("IsWalking");
 
 
+        [SerializeField] private PlayerController playerController;
+
+
         private Animator _animator;
-        private PlayerController _playerController;
 
 
         private void Awake() {
             _animator = GetComponent<Animator>();
-            _animator.SetBool(IsWalking, _playerController.IsWalking());
-        }
-
-        private void Start() {
-            _playerController = PlayerController.Instance;
+            _animator.SetBool(IsWalking, playerController.IsWalking());
         }
 
         private void Update() {
-            _animator.SetBool(IsWalking, _playerController.IsWalking());
+            if (!IsOwner) return;
+
+            _animator.SetBool(IsWalking, playerController.IsWalking());
         }
     }
 }

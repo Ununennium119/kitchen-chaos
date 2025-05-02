@@ -1,5 +1,4 @@
-﻿using Counter;
-using Counter.Logic;
+﻿using Counter.Logic;
 using UI.WorldSpace.Progress;
 using UnityEngine;
 using UnityEngine.UI;

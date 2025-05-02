@@ -1,4 +1,5 @@
-﻿using UnityEngine.SceneManagement;
+﻿using Unity.Netcode;
+using UnityEngine.SceneManagement;
 
 /// <summary>
 /// This class is responsible for loading scenes.
@@ -7,7 +8,9 @@ public static class SceneLoader {
     public enum Scene {
         MainMenuScene,
         LoadingScene,
-        GameScene
+        GameScene,
+        LobbyScene,
+        CharacterSelectScene,
     }
 
 
@@ -19,7 +22,16 @@ public static class SceneLoader {
         SceneManager.LoadScene(Scene.LoadingScene.ToString());
     }
 
+    public static void LoadNetwork(Scene scene) {
+        NetworkManager.Singleton.SceneManager.LoadScene(scene.ToString(), LoadSceneMode.Single);
+    }
+
     public static void LoadSceneCallback() {
         SceneManager.LoadScene(_targetScene.ToString());
+    }
+
+
+    public static bool IsSceneActive(Scene scene) {
+        return SceneManager.GetActiveScene().name == scene.ToString();
     }
 }

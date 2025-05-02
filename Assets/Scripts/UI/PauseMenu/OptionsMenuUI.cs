@@ -96,7 +96,7 @@ namespace UI.PauseMenu {
             _soundEffectManager = SoundEffectManager.Instance;
             _inputManager = InputManager.Instance;
 
-            _gameManager.OnPauseToggled += OnPauseToggledAction;
+            _gameManager.OnLocalPauseToggled += OnLocalPauseToggledAction;
 
             UpdateMusicVolume();
             UpdateSoundEffectsVolume();
@@ -131,7 +131,8 @@ namespace UI.PauseMenu {
             alternativeInteractText.text =
                 _inputManager.GetPlayerBindingDisplayString(InputManager.Binding.AlternativeInteract);
             pauseText.text = _inputManager.GetPlayerBindingDisplayString(InputManager.Binding.Pause);
-            gamepadInteractText.text = _inputManager.GetPlayerBindingDisplayString(InputManager.Binding.GamepadInteract);
+            gamepadInteractText.text =
+                _inputManager.GetPlayerBindingDisplayString(InputManager.Binding.GamepadInteract);
             gamepadAlternativeInteractText.text =
                 _inputManager.GetPlayerBindingDisplayString(InputManager.Binding.GamepadAlternativeInteract);
             gamepadPauseText.text = _inputManager.GetPlayerBindingDisplayString(InputManager.Binding.GamepadPause);
@@ -150,7 +151,7 @@ namespace UI.PauseMenu {
         }
 
 
-        private void OnPauseToggledAction(object sender, GameManager.OnPauseToggledArgs e) {
+        private void OnLocalPauseToggledAction(object sender, GameManager.OnLocalPauseToggledArgs e) {
             if (e.IsGamePaused) return;
 
             Hide();

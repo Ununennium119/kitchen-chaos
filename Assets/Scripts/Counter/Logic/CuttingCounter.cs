@@ -1,7 +1,9 @@
 using System;
 using System.Linq;
+using Player;
 using ScriptableObjects;
 using UI.WorldSpace.Progress;
+using Unity.Netcode;
 using UnityEngine;
 
 namespace Counter.Logic {
@@ -31,11 +33,14 @@ namespace Counter.Logic {
         [SerializeField, Tooltip("Scriptable object of the cutting recipes")]
         private CuttingRecipeSO[] cuttingRecipeSOArray;
 
+        [SerializeField, Tooltip("Scriptable object of list of kitchen objects")]
+        private KitchenObjectListSO kitchenObjectListSO;
+
 
         private int _numberOfCuts;
 
 
-        public override void Interact(Player.PlayerController playerController) {
+        public override void Interact(PlayerController playerController) {
             var playerKitchenObject = playerController.GetKitchenObject();
             var counterKitchenObject = GetKitchenObject();
 
@@ -63,7 +68,7 @@ namespace Counter.Logic {
             counterKitchenObject?.SetParent(playerController);
 
             // Reset number of cuts
-            UpdateNumberOfCuts(0, 1);
+            UpdateNumberOfCutsServerRpc(0, 1, -1);
         }
 
         public override void InteractAlternate() {
@@ -73,23 +78,10 @@ namespace Counter.Logic {
             if (recipeSO == null) return;
 
             // Increment number of cuts
-            UpdateNumberOfCuts(_numberOfCuts + 1, recipeSO.totalCuts);
-            OnCut?.Invoke(this, EventArgs.Empty);
-            OnAnyCut?.Invoke(this, EventArgs.Empty);
-
-            if (_numberOfCuts < recipeSO.totalCuts) return;
-
-            // Cutting is completed
-            GetKitchenObject().DestroySelf();
-            KitchenObject.KitchenObject.SpawnKitchenObject(recipeSO.output, this);
-        }
-
-
-        private void UpdateNumberOfCuts(int numberOfCuts, int totalNumberOfCuts) {
-            _numberOfCuts = numberOfCuts;
-            OnProgressChanged?.Invoke(
-                this,
-                new IHasProgress.OnProgressChangedArgs { ProgressNormalized = (float)_numberOfCuts / totalNumberOfCuts }
+            UpdateNumberOfCutsServerRpc(
+                _numberOfCuts + 1,
+                recipeSO.totalCuts,
+                GetIndexOfKitchenObjectSO(recipeSO.output)
             );
         }
 
@@ -100,6 +92,49 @@ namespace Counter.Logic {
 
         private bool HasRecipe(KitchenObjectSO kitchenObjectSO) {
             return GetRecipe(kitchenObjectSO) != null;
+        }
+
+        private int GetIndexOfKitchenObjectSO(KitchenObjectSO kitchenObjectSO) {
+            return kitchenObjectListSO.kitchenObjectSOList.IndexOf(kitchenObjectSO);
+        }
+
+        private KitchenObjectSO GetKitchenObjectSO(int index) {
+            return kitchenObjectListSO.kitchenObjectSOList[index];
+        }
+
+
+        [ServerRpc(RequireOwnership = false)]
+        private void UpdateNumberOfCutsServerRpc(
+            int numberOfCuts,
+            int totalNumberOfCuts,
+            int outputKitchenObjectIndex
+        ) {
+            UpdateNumberOfCutsClientRpc(numberOfCuts, totalNumberOfCuts);
+
+            if (outputKitchenObjectIndex == -1) return;
+
+            InvokeOnCutClientRpc();
+
+            if (numberOfCuts < totalNumberOfCuts) return;
+
+            // Cutting is completed
+            GetKitchenObject().DestroySelf();
+            KitchenObject.KitchenObject.SpawnKitchenObject(GetKitchenObjectSO(outputKitchenObjectIndex), this);
+        }
+
+        [ClientRpc]
+        private void UpdateNumberOfCutsClientRpc(int numberOfCuts, int totalNumberOfCuts) {
+            _numberOfCuts = numberOfCuts;
+            OnProgressChanged?.Invoke(
+                this,
+                new IHasProgress.OnProgressChangedArgs { ProgressNormalized = (float)_numberOfCuts / totalNumberOfCuts }
+            );
+        }
+
+        [ClientRpc]
+        private void InvokeOnCutClientRpc() {
+            OnCut?.Invoke(this, EventArgs.Empty);
+            OnAnyCut?.Invoke(this, EventArgs.Empty);
         }
     }
 }

@@ -1,5 +1,7 @@
 using System;
 using Manager;
+using Player;
+using Unity.Netcode;
 
 namespace Counter.Logic {
     public class DeliveryCounter : BaseCounter {
@@ -17,7 +19,7 @@ namespace Counter.Logic {
         }
 
 
-        public override void Interact(Player.PlayerController playerController) {
+        public override void Interact(PlayerController playerController) {
             var playerKitchenObject = playerController.GetKitchenObject();
             // Do nothing if player does not have plate
             if (playerKitchenObject?.TryGetPlateKitchenObject(out var plateKitchenObject) != true) return;
@@ -26,11 +28,22 @@ namespace Counter.Logic {
 
             // Plate is delivered
             plateKitchenObject.DestroySelf();
-            OnDeliverySuccess?.Invoke(this, EventArgs.Empty);
+            DeliverySuccessServerRpc();
         }
 
         public override void InteractAlternate() {
             // Do Nothing
+        }
+
+
+        [ServerRpc(RequireOwnership = false)]
+        private void DeliverySuccessServerRpc() {
+            DeliverySuccessClientRpc();
+        }
+
+        [ClientRpc]
+        private void DeliverySuccessClientRpc() {
+            OnDeliverySuccess?.Invoke(this, EventArgs.Empty);
         }
     }
 }

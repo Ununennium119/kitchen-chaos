@@ -8,7 +8,8 @@ namespace Counter.AudioVisual {
         private static readonly int OpenClose = Animator.StringToHash("OpenClose");
 
 
-        [SerializeField, Tooltip("The container counter")] private ContainerCounter counter;
+        [SerializeField, Tooltip("The container counter")]
+        private ContainerCounter counter;
 
 
         private Animator _animator;
