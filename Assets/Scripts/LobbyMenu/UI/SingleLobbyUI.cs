@@ -1,9 +1,9 @@
-﻿using Multiplayer;
+﻿using LobbyMenu.Logic;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
-namespace UI.Lobby {
+namespace LobbyMenu.UI {
     public class SingleLobbyUI : MonoBehaviour {
         [SerializeField, Tooltip("The lobby name text")]
         private TextMeshProUGUI lobbyName;

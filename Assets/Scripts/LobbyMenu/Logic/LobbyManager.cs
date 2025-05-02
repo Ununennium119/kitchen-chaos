@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using Multiplayer;
 using Unity.Netcode;
 using Unity.Netcode.Transports.UTP;
 using Unity.Services.Authentication;
@@ -11,7 +12,7 @@ using Unity.Services.Relay;
 using Unity.Services.Relay.Models;
 using UnityEngine;
 
-namespace Multiplayer {
+namespace LobbyMenu.Logic {
     public class LobbyManager : MonoBehaviour {
         private const float MAX_HEARTBEAT_TIMER = 15f;
         private const float LOBBY_REFRESH_TIMER = 5f;

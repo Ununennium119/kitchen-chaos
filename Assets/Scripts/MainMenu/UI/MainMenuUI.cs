@@ -3,7 +3,7 @@ using Player;
 using UnityEngine;
 using UnityEngine.UI;
 
-namespace UI.MainMenu {
+namespace MainMenu.UI {
     public class MainMenuUI : MonoBehaviour {
         [SerializeField, Tooltip("The play button")]
         private Button playButton;

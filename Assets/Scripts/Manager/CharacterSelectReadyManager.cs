@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using LobbyMenu;
+using LobbyMenu.Logic;
 using Multiplayer;
 using Unity.Netcode;
 using UnityEngine;

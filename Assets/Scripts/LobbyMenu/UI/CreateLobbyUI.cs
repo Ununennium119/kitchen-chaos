@@ -1,9 +1,10 @@
-﻿using Multiplayer;
+﻿using LobbyMenu.Logic;
 using TMPro;
 using UnityEngine;
+using UnityEngine.EventSystems;
 using UnityEngine.UI;
 
-namespace UI.Lobby {
+namespace LobbyMenu.UI {
     public class CreateLobbyUI : MonoBehaviour {
         [SerializeField, Tooltip("The lobby name input")]
         private TMP_InputField lobbyNameInput;
@@ -20,6 +21,7 @@ namespace UI.Lobby {
 
         public void Show() {
             gameObject.SetActive(true);
+            lobbyNameInput.Select();
         }
 
 
@@ -27,7 +29,10 @@ namespace UI.Lobby {
             createButton.onClick.AddListener(() => {
                 _lobbyManager.CreateLobby(lobbyNameInput.text, lobbyPrivateToggle.isOn);
             });
-            closeButton.onClick.AddListener(Hide);
+            closeButton.onClick.AddListener(() => {
+                EventSystem.current.SetSelectedGameObject(null);
+                Hide();
+            });
         }
 
         private void Start() {

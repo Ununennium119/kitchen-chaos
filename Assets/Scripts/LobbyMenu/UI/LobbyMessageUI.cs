@@ -1,11 +1,13 @@
 ﻿using System;
+using LobbyMenu.Logic;
 using Multiplayer;
 using TMPro;
 using Unity.Netcode;
 using UnityEngine;
+using UnityEngine.EventSystems;
 using UnityEngine.UI;
 
-namespace UI.Lobby {
+namespace LobbyMenu.UI {
     public class LobbyMessageUI : MonoBehaviour {
         private MultiplayerManager _multiplayerManager;
         private LobbyManager _lobbyManager;
@@ -18,7 +20,10 @@ namespace UI.Lobby {
 
 
         private void Awake() {
-            closeButton.onClick.AddListener(Hide);
+            closeButton.onClick.AddListener(() => {
+                EventSystem.current.SetSelectedGameObject(null);
+                Hide();
+            });
         }
 
         private void Start() {
@@ -49,6 +54,7 @@ namespace UI.Lobby {
 
         private void Show() {
             gameObject.SetActive(true);
+            closeButton.Select();
         }
 
         private void Hide() {

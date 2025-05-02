@@ -1,7 +1,7 @@
-﻿using Multiplayer;
+﻿using LobbyMenu.Logic;
 using UnityEngine;
 
-namespace UI.Lobby {
+namespace LobbyMenu.UI {
     public class LobbyListUI : MonoBehaviour {
         [SerializeField, Tooltip("The lobby container")]
         private Transform lobbyContainer;

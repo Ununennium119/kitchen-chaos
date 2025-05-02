@@ -1,10 +1,10 @@
-﻿using Manager;
-using Multiplayer;
+﻿using LobbyMenu.Logic;
+using Manager;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
-namespace UI.Lobby {
+namespace LobbyMenu.UI {
     public class LobbyUI : MonoBehaviour {
         [SerializeField, Tooltip("The main menu button")]
         private Button mainMenuButton;

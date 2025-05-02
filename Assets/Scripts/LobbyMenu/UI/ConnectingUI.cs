@@ -2,7 +2,7 @@
 using Multiplayer;
 using UnityEngine;
 
-namespace UI.Lobby {
+namespace LobbyMenu.UI {
     public class ConnectingUI : MonoBehaviour {
         private MultiplayerManager _multiplayerManager;
 

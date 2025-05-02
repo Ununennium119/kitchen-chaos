@@ -1,8 +1,10 @@
-﻿using Multiplayer;
+﻿using LobbyMenu;
+using LobbyMenu.Logic;
+using Multiplayer;
 using Unity.Netcode;
 using UnityEngine;
 
-namespace Manager {
+namespace MainMenu.Logic {
     public class MainMenuCleanUpManager : MonoBehaviour {
         private void Awake() {
             if (NetworkManager.Singleton != null) {
