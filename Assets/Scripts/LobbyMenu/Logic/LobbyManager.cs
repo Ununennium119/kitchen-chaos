@@ -1,7 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
-using Multiplayer;
+using Common;
+using Common.Logic;
 using Unity.Netcode;
 using Unity.Netcode.Transports.UTP;
 using Unity.Services.Authentication;
@@ -15,7 +16,6 @@ using UnityEngine;
 namespace LobbyMenu.Logic {
     public class LobbyManager : MonoBehaviour {
         private const float MAX_HEARTBEAT_TIMER = 15f;
-        private const float LOBBY_REFRESH_TIMER = 5f;
         private const string RELAY_JOIN_CODE_KEY = "RelayJoinCode";
         private const string CONNECTION_TYPE = RelayServerEndpoint.ConnectionTypeWss;
 
@@ -36,7 +36,6 @@ namespace LobbyMenu.Logic {
 
         private Lobby _joinedLobby;
         private float _heartbeatTimer = MAX_HEARTBEAT_TIMER;
-        private float _lobbyRefreshTimer = LOBBY_REFRESH_TIMER;
 
 
         private static async Task InitializeUnityAuthentication() {
@@ -216,6 +215,22 @@ namespace LobbyMenu.Logic {
             }
         }
 
+        public async void RefreshLobbyList() {
+            try {
+                var options = new QueryLobbiesOptions {
+                    Filters = new List<QueryFilter> {
+                        new(QueryFilter.FieldOptions.AvailableSlots, "0", QueryFilter.OpOptions.GT)
+                    }
+                };
+                var response = await LobbyService.Instance.QueryLobbiesAsync(options);
+                OnLobbyListRefreshed?.Invoke(this, new OnLobbyListRefreshedEventArgs {
+                    LobbyList = response.Results
+                });
+            } catch (Exception e) {
+                Debug.LogError(e);
+            }
+        }
+
 
         private void Awake() {
             Debug.Log("Setting up LobbyManager...");
@@ -230,7 +245,6 @@ namespace LobbyMenu.Logic {
         }
 
         private void Update() {
-            HandleLobbyRefresh();
             if (IsLobbyHost()) {
                 HandleHeartbeat();
             }
@@ -240,7 +254,7 @@ namespace LobbyMenu.Logic {
         private async void InitializeLobby() {
             try {
                 await InitializeUnityAuthentication();
-                ListLobbies();
+                RefreshLobbyList();
             } catch (Exception e) {
                 Debug.LogError(e);
             }
@@ -252,18 +266,6 @@ namespace LobbyMenu.Logic {
             if (_heartbeatTimer <= 0) {
                 _heartbeatTimer = MAX_HEARTBEAT_TIMER;
                 LobbyService.Instance.SendHeartbeatPingAsync(_joinedLobby.Id);
-            }
-        }
-
-        private void HandleLobbyRefresh() {
-            if (_joinedLobby != null) return;
-            if (!SceneLoader.IsSceneActive(SceneLoader.Scene.LobbyScene)) return;
-            if (!AuthenticationService.Instance.IsSignedIn) return;
-
-            _lobbyRefreshTimer -= Time.deltaTime;
-            if (_lobbyRefreshTimer <= 0) {
-                _lobbyRefreshTimer = LOBBY_REFRESH_TIMER;
-                ListLobbies();
             }
         }
 
@@ -284,23 +286,6 @@ namespace LobbyMenu.Logic {
         private bool IsLobbyHost() {
             if (_joinedLobby == null) return false;
             return _joinedLobby.HostId == AuthenticationService.Instance.PlayerId;
-        }
-
-
-        private async void ListLobbies() {
-            try {
-                var options = new QueryLobbiesOptions {
-                    Filters = new List<QueryFilter> {
-                        new(QueryFilter.FieldOptions.AvailableSlots, "0", QueryFilter.OpOptions.GT)
-                    }
-                };
-                var response = await LobbyService.Instance.QueryLobbiesAsync(options);
-                OnLobbyListRefreshed?.Invoke(this, new OnLobbyListRefreshedEventArgs {
-                    LobbyList = response.Results
-                });
-            } catch (Exception e) {
-                Debug.LogError(e);
-            }
         }
     }
 }
