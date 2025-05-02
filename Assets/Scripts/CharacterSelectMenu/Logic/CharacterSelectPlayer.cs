@@ -1,5 +1,4 @@
 ﻿using System;
-using Common;
 using Common.Logic;
 using Game.Player;
 using LobbyMenu.Logic;
@@ -9,11 +8,14 @@ using UnityEngine;
 using UnityEngine.UI;
 
 namespace CharacterSelectMenu.Logic {
+    /// <summary>
+    /// Handles the visual representation and interaction logic for a player in the character selection menu.
+    /// </summary>
     public class CharacterSelectPlayer : MonoBehaviour {
         [SerializeField, Tooltip("The index of the player visual")]
         private int index;
 
-        [SerializeField, Tooltip("The ready game object")]
+        [SerializeField, Tooltip("The game object that shows when the player is ready")]
         private GameObject readyGameObject;
 
         [SerializeField, Tooltip("The player name text")]
@@ -38,18 +40,22 @@ namespace CharacterSelectMenu.Logic {
                 _multiplayerManager.KickPlayer(playerData.ClientId);
             });
         }
-    
+
         private void Start() {
             _multiplayerManager = MultiplayerManager.Instance;
             _lobbyManager = LobbyManager.Instance;
             _characterSelectReadyManager = CharacterSelectReadyManager.Instance;
 
+            // Subscribe to events
             _multiplayerManager.OnPlayerDataListChanged += OnPlayerDataListChangedAction;
             _characterSelectReadyManager.OnReadyChanged += OnReadyChangedAction;
 
             UpdatePlayerVisual();
+
+            // At start, no one is ready
             readyGameObject.SetActive(false);
 
+            // Show kick button for the server
             var isKickButtonActive = NetworkManager.Singleton.IsServer;
             if (_multiplayerManager.HasPlayerData(index)) {
                 var playerData = _multiplayerManager.GetPlayerData(index);
@@ -63,11 +69,16 @@ namespace CharacterSelectMenu.Logic {
         }
 
 
+        /// <summary>
+        /// Updates the UI elements based on the current player data.
+        /// </summary>
         private void UpdatePlayerVisual() {
+            // Set active
             var isActive = _multiplayerManager.HasPlayerData(index);
             gameObject.SetActive(isActive);
             if (!isActive) return;
 
+            // Set player name and color
             var playerData = _multiplayerManager.GetPlayerData(index);
             nameText.text = playerData.Name.ToString();
             var color = _multiplayerManager.GetPlayerColor(playerData.ColorIndex);
@@ -79,6 +90,9 @@ namespace CharacterSelectMenu.Logic {
             UpdatePlayerVisual();
         }
 
+        /// <summary>
+        /// Updates the ready status indicator based on readiness state.
+        /// </summary>
         private void OnReadyChangedAction(object sender, EventArgs e) {
             var isActive = false;
             if (_multiplayerManager.HasPlayerData(index)) {
