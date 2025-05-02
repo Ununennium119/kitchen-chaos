@@ -38,6 +38,12 @@ namespace UI.Lobby {
 
         private void OnDestroy() {
             _multiplayerManager.OnFailedToJoin -= OnFailedToJoinAction;
+
+            _lobbyManager.OnCreateLobbyStarted -= OnCreateLobbyStartedAction;
+            _lobbyManager.OnCreateLobbyFailed -= OnCreateLobbyFailedAction;
+            _lobbyManager.OnJoinLobbyStarted -= OnJoinLobbyStartedAction;
+            _lobbyManager.OnJoinLobbyFailed -= OnJoinLobbyFailedAction;
+            _lobbyManager.OnQuickJoinNotFound -= OnQuickJoinNotFoundAction;
         }
 
 
