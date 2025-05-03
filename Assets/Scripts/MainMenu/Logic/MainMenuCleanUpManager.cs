@@ -9,14 +9,17 @@ namespace MainMenu.Logic {
     /// </summary>
     public class MainMenuCleanUpManager : MonoBehaviour {
         private void Awake() {
-            if (NetworkManager.Singleton != null) {
-                Destroy(NetworkManager.Singleton.gameObject);
-            }
+            var isHost = NetworkManager.Singleton?.IsHost == true;
+            if (!isHost) return;
+
             if (MultiplayerManager.Instance != null) {
                 Destroy(MultiplayerManager.Instance.gameObject);
             }
             if (LobbyManager.Instance != null) {
                 Destroy(LobbyManager.Instance.gameObject);
+            }
+            if (NetworkManager.Singleton != null) {
+                Destroy(NetworkManager.Singleton.gameObject);
             }
         }
     }

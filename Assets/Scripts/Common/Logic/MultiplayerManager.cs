@@ -46,6 +46,11 @@ namespace Common.Logic {
 
 
         private readonly NetworkList<PlayerData> _playerDataList = new();
+        
+        /// <summary>
+        /// Index of the next spawned plate.
+        /// </summary>
+        private readonly NetworkVariable<int> _nextPlateIndex = new();
 
 
         /// <summary>
@@ -174,6 +179,17 @@ namespace Common.Logic {
         }
 
 
+        /// <summary>
+        /// Gets next plate index and then increments it.
+        /// </summary>
+        /// <returns>Next plate index</returns>
+        public int GetPlateIndex() {
+            var index = _nextPlateIndex.Value;
+            IncrementPlateIndexServerRpc();
+            return index;
+        }
+
+
         private void Awake() {
             Logger.LogInitializingInstance(this);
             if (Instance != null) {
@@ -249,7 +265,7 @@ namespace Common.Logic {
         [ServerRpc(RequireOwnership = false)]
         private void DestroyKitchenObjectServerRpc(NetworkObjectReference kitchenObjectNetworkObjectReference) {
             kitchenObjectNetworkObjectReference.TryGet(out var kitchenObjectNetworkObject);
-            kitchenObjectNetworkObject.Despawn();
+            kitchenObjectNetworkObject?.Despawn();
         }
 
 
@@ -282,6 +298,14 @@ namespace Common.Logic {
             playerData.Name = playerName;
             playerData.PlayerId = playerId;
             _playerDataList[playerDataIndex] = playerData;
+        }
+
+        /// <summary>
+        /// Server RPC to increment next plate index.
+        /// </summary>
+        [ServerRpc(RequireOwnership = false)]
+        private void IncrementPlateIndexServerRpc() {
+            _nextPlateIndex.Value++;
         }
 
 

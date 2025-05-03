@@ -23,7 +23,9 @@ namespace Common.UI {
         }
 
         public override void OnDestroy() {
-            NetworkManager.Singleton.OnClientDisconnectCallback -= OnClientDisconnectCallback;
+            if (NetworkManager.Singleton != null) {
+                NetworkManager.Singleton.OnClientDisconnectCallback -= OnClientDisconnectCallback;
+            }
         }
 
 

@@ -79,6 +79,9 @@ namespace Game.KitchenObject {
         /// <param name="newParentNetworkObjectReference">Network object reference of the new parent</param>
         [ServerRpc(RequireOwnership = false)]
         private void SetParentServerRpc(NetworkObjectReference newParentNetworkObjectReference) {
+            newParentNetworkObjectReference.TryGet(out var newParentNetworkObject);
+            var newParent = newParentNetworkObject.GetComponent<IKitchenObjectParent>();
+            if (newParent.HasKitchenObject()) return;
             SetParentClientRpc(newParentNetworkObjectReference);
         }
 

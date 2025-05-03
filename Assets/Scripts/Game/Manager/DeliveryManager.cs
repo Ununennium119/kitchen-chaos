@@ -49,6 +49,11 @@ namespace Game.Manager {
         private readonly List<OrderRecipeSO> _waitingOrderRecipeSOList = new();
         private int _deliveredOrdersCount;
         private bool _isDeliveryActive;
+        /// <summary>
+        /// List of delivered plate indices.
+        /// This list is used to prevent delivering the same plate multiple times.
+        /// </summary>
+        private readonly List<int> _deliveredPlateIndices = new();
 
 
         /// <summary>
@@ -82,7 +87,7 @@ namespace Game.Manager {
                 return false;
             }
 
-            SuccessfulDeliveryServerRpc(deliveredWaitingOrderIndex);
+            SuccessfulDeliveryServerRpc(deliveredWaitingOrderIndex, plateKitchenObject.Index);
             return true;
         }
 
@@ -153,8 +158,12 @@ namespace Game.Manager {
         /// Server RPC that handles delivery success on the server for all clients.
         /// </summary>
         /// <param name="orderIndex">Index of the successfully matched order.</param>
+        /// <param name="plateIndex">Index of the plate kitchen object</param>
         [ServerRpc(RequireOwnership = false)]
-        private void SuccessfulDeliveryServerRpc(int orderIndex) {
+        private void SuccessfulDeliveryServerRpc(int orderIndex, int plateIndex) {
+            if (_deliveredPlateIndices.Contains(plateIndex)) return;
+
+            _deliveredPlateIndices.Add(plateIndex);
             SuccessfullyDeliveryClientRpc(orderIndex);
         }
 
