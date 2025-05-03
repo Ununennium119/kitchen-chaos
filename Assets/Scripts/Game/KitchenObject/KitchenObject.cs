@@ -1,10 +1,12 @@
-using Common;
 using Common.Logic;
 using Game.ScriptableObjects;
 using Unity.Netcode;
 using UnityEngine;
 
 namespace Game.KitchenObject {
+    /// <summary>
+    /// Represents a kitchen object.
+    /// </summary>
     [RequireComponent(typeof(FollowTransform))]
     public class KitchenObject : NetworkBehaviour {
         [SerializeField, Tooltip("Scriptable object of the kitchen object")]
@@ -47,11 +49,6 @@ namespace Game.KitchenObject {
             return kitchenObjectSO;
         }
 
-        /// <returns>Parent of this kitchen object</returns>
-        public IKitchenObjectParent GetParent() {
-            return _parent;
-        }
-
         /// <summary>
         /// Sets the parent of this kitchen object.
         /// </summary>
@@ -76,11 +73,19 @@ namespace Game.KitchenObject {
         }
 
 
+        /// <summary>
+        /// Server RPC that sets parent of the game object for all client.
+        /// </summary>
+        /// <param name="newParentNetworkObjectReference">Network object reference of the new parent</param>
         [ServerRpc(RequireOwnership = false)]
         private void SetParentServerRpc(NetworkObjectReference newParentNetworkObjectReference) {
             SetParentClientRpc(newParentNetworkObjectReference);
         }
 
+        /// <summary>
+        /// Client RPC that sets parent of the game object for the client.
+        /// </summary>
+        /// <param name="newParentNetworkObjectReference">Network object reference of the new parent</param>
         [ClientRpc]
         private void SetParentClientRpc(NetworkObjectReference newParentNetworkObjectReference) {
             newParentNetworkObjectReference.TryGet(out var newParentNetworkObject);
@@ -95,22 +100,34 @@ namespace Game.KitchenObject {
             _parent = newParent;
         }
 
+        /// <summary>
+        /// Server RPC that clears parent of the game object for all clients.
+        /// </summary>
         [ServerRpc(RequireOwnership = false)]
         private void ClearParentServerRpc() {
             ClearParentClientRpc();
         }
 
+        /// <summary>
+        /// Client RPC that clears parent of the game object for the client.
+        /// </summary>
         [ClientRpc]
         private void ClearParentClientRpc() {
             _parent?.ClearKitchenObject();
             _parent = null;
         }
 
+        /// <summary>
+        /// Server RPC that clears kitchen object of the parent for all clients.
+        /// </summary>
         [ServerRpc(RequireOwnership = false)]
         private void ClearParentKitchenObjectServerRpc() {
             ClearParentKitchenObjectClientRpc();
         }
 
+        /// <summary>
+        /// Client RPC that clears kitchen object of the parent for this client.
+        /// </summary>
         [ClientRpc]
         private void ClearParentKitchenObjectClientRpc() {
             _parent?.ClearKitchenObject();

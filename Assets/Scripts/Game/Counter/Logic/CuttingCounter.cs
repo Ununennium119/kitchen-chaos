@@ -17,6 +17,10 @@ namespace Game.Counter.Logic {
         public static event EventHandler OnAnyCut;
 
 
+        /// <summary>
+        /// Resets the static objects, specifically the OnTrash event.
+        /// This method is used to clean up the event subscription.
+        /// </summary>
         public static void ResetStaticObjects() {
             OnAnyCut = null;
         }

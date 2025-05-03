@@ -1,7 +1,9 @@
 using System;
+using System.Diagnostics.CodeAnalysis;
 
 namespace LobbyMenu.Logic {
     [Serializable]
+    [SuppressMessage("ReSharper", "UnusedMember.Global")]
     internal enum ConnectionType {
         Udp,
         Dtls,

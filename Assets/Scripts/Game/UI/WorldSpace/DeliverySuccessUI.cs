@@ -3,6 +3,9 @@ using Game.Counter.Logic;
 using UnityEngine;
 
 namespace Game.UI.WorldSpace {
+    /// <summary>
+    /// This class manages the UI that appears when a delivery is successful.
+    /// </summary>
     [RequireComponent(typeof(Animator))]
     public class DeliverySuccessUI : MonoBehaviour {
         private static readonly int ShowHide = Animator.StringToHash("ShowHide");
@@ -24,6 +27,9 @@ namespace Game.UI.WorldSpace {
         }
 
 
+        /// <remarks>
+        /// Invoked when the <see cref="DeliveryCounter.OnDeliverySuccess"/> event is triggered.
+        /// </remarks>
         private void OnDeliverySuccessAction(object sender, EventArgs e) {
             _animator.SetTrigger(ShowHide);
         }

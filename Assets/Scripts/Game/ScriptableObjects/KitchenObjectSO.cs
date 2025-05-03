@@ -14,9 +14,5 @@ namespace Game.ScriptableObjects {
         /// Sprite of the kitchen object
         /// </summary>
         public Sprite sprite;
-        /// <summary>
-        /// Name of the kitchen object
-        /// </summary>
-        public string objectName;
     }
 }

@@ -1,5 +1,4 @@
-﻿using Common.Logic;
-using Common.Utility;
+﻿using Common.Utility;
 using UnityEngine;
 
 namespace LoadingMenu {

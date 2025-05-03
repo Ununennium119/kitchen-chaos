@@ -4,6 +4,9 @@ using TMPro;
 using UnityEngine;
 
 namespace Game.UI {
+    /// <summary>
+    /// Handles the display of the tutorial UI, showing the control instructions for the player.
+    /// </summary>
     public class TutorialUI : MonoBehaviour {
         [SerializeField] private TextMeshProUGUI keyboardMoveUpText;
         [SerializeField] private TextMeshProUGUI keyboardMoveLeftText;
@@ -58,6 +61,12 @@ namespace Game.UI {
         }
 
 
+        /// <summary>
+        /// Shows the tutorial UI when the game is waiting to start.
+        /// </summary>
+        /// <remarks>
+        /// Invoked when the <see cref="GameManager.OnStateChanged"/> event is triggered.
+        /// </remarks>
         private void OnGameStateChangedAction(object sender, GameManager.OnStateChangedArgs e) {
             if (e.State == GameManager.State.WaitingToStart) {
                 Show();
@@ -66,12 +75,24 @@ namespace Game.UI {
             }
         }
 
+        /// <summary>
+        /// Hides the tutorial UI when the player is ready.
+        /// </summary>
+        /// <remarks>
+        /// Invoked when the <see cref="GameManager.OnLocalPlayerReadyChanged"/> event is triggered.
+        /// </remarks>
         private void OnLocalPlayerReadyChangedAction(object sender, GameManager.OnLocalPlayerReadyChangedArgs e) {
             if (e.IsLocalPlayerReady) {
                 Hide();
             }
         }
 
+        /// <summary>
+        /// Updates the tutorial UI texts.
+        /// </summary>
+        /// <remarks>
+        /// Invoked when the <see cref="InputManager.OnRebind"/> event is triggered.
+        /// </remarks>
         private void OnRebindAction(object sender, EventArgs e) {
             UpdateInputTexts();
         }

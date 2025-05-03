@@ -1,9 +1,8 @@
 using System;
-using Common;
-using Common.Logic;
 using Common.Utility;
 using UnityEngine;
 using UnityEngine.InputSystem;
+using Logger = Common.Utility.Logger;
 
 namespace Game.Manager {
     /// <summary>This class is responsible for game inputs.</summary>
@@ -19,7 +18,7 @@ namespace Game.Manager {
             Pause,
             GamepadInteract,
             GamepadAlternativeInteract,
-            GamepadPause,
+            GamepadPause
         }
 
 
@@ -137,11 +136,14 @@ namespace Game.Manager {
 
 
         private void Awake() {
-            Debug.Log("Setting up InputManager...");
+            Logger.LogInitializingInstance(this);
             if (Instance != null) {
-                Debug.LogError("There is more than one InputManager instance!");
+                Logger.LogMultipleInstancesError(this);
+                Destroy(gameObject);
+                return;
             }
             Instance = this;
+            Logger.LogInstanceInitialized(this);
 
             _inputSystemActions = new InputSystemActions();
             if (PlayerPrefsManager.HasPlayerBindingsJsonString()) {

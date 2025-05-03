@@ -6,6 +6,7 @@ using Game.KitchenObject;
 using Game.ScriptableObjects;
 using Unity.Netcode;
 using UnityEngine;
+using Logger = Common.Utility.Logger;
 using Random = UnityEngine.Random;
 
 namespace Game.Manager {
@@ -45,7 +46,7 @@ namespace Game.Manager {
 
 
         private GameManager _gameManager;
-        private List<OrderRecipeSO> _waitingOrderRecipeSOList;
+        private readonly List<OrderRecipeSO> _waitingOrderRecipeSOList = new();
         private int _deliveredOrdersCount;
         private bool _isDeliveryActive;
 
@@ -97,14 +98,14 @@ namespace Game.Manager {
 
 
         private void Awake() {
-            Debug.Log("Setting up DeliveryManager...");
+            Logger.LogInitializingInstance(this);
             if (Instance != null) {
-                Debug.LogError("There is more than one DeliveryManager in the scene!");
+                Logger.LogMultipleInstancesError(this);
+                Destroy(gameObject);
+                return;
             }
             Instance = this;
-
-            _waitingOrderRecipeSOList = new List<OrderRecipeSO>();
-            _deliveredOrdersCount = 0;
+            Logger.LogInstanceInitialized(this);
         }
 
         private void Start() {
@@ -120,6 +121,9 @@ namespace Game.Manager {
         }
 
 
+        /// <summary>
+        /// Coroutine that periodically spawns new orders if conditions allow for all clients.
+        /// </summary>
         private IEnumerator OrderSpawnCoroutine() {
             while (true) {
                 yield return new WaitForSeconds(orderSpawnCooldown);
@@ -134,21 +138,38 @@ namespace Game.Manager {
         }
 
 
+        /// <summary>
+        /// Reacts to game state changes to enable or disable delivery flow.
+        /// </summary>
+        /// <remarks>
+        /// Invoked when the <see cref="GameManager.OnStateChanged"/> event is triggered.
+        /// </remarks>
         private void OnGameStateChangedAction(object sender, GameManager.OnStateChangedArgs e) {
             _isDeliveryActive = e.State == GameManager.State.Playing;
         }
 
 
+        /// <summary>
+        /// Server RPC that handles delivery success on the server for all clients.
+        /// </summary>
+        /// <param name="orderIndex">Index of the successfully matched order.</param>
         [ServerRpc(RequireOwnership = false)]
         private void SuccessfulDeliveryServerRpc(int orderIndex) {
             SuccessfullyDeliveryClientRpc(orderIndex);
         }
 
+        /// <summary>
+        /// Server RPC that delivery failure on the server for all clients.
+        /// </summary>
         [ServerRpc(RequireOwnership = false)]
         private void FailedDeliveryServerRpc() {
             FailedDeliveryClientRpc();
         }
 
+        /// <summary>
+        /// Client RPC that notifies handles a successful delivery for the client.
+        /// </summary>
+        /// <param name="orderIndex">Index of the successfully delivered order.</param>
         [ClientRpc]
         private void SuccessfullyDeliveryClientRpc(int orderIndex) {
             _waitingOrderRecipeSOList.RemoveAt(orderIndex);
@@ -157,11 +178,19 @@ namespace Game.Manager {
             _deliveredOrdersCount += 1;
         }
 
+        /// <summary>
+        /// Client RPC that notifies handles a failed delivery for the client.
+        /// </summary>
         [ClientRpc]
         private void FailedDeliveryClientRpc() {
             OnDeliveryFail?.Invoke(this, EventArgs.Empty);
         }
 
+
+        /// <summary>
+        /// Client RPC that spawns a new order for the client.
+        /// </summary>
+        /// <param name="orderIndex">Index of the order recipe to spawn.</param>
         [ClientRpc]
         private void SpawnOrderClientRpc(int orderIndex) {
             var newOrderRecipeSO = orderRecipeListSO.orderRecipeSOList[orderIndex];

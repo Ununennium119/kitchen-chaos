@@ -11,7 +11,7 @@ namespace Common.Utility {
             LoadingScene,
             GameScene,
             LobbyScene,
-            CharacterSelectScene,
+            CharacterSelectScene
         }
 
 

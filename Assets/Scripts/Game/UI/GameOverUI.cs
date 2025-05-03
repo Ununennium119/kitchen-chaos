@@ -1,12 +1,13 @@
-﻿using Common;
-using Common.Logic;
-using Common.Utility;
+﻿using Common.Utility;
 using Game.Manager;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
 namespace Game.UI {
+    /// <summary>
+    /// This class handles the Game Over UI.
+    /// </summary>
     public class GameOverUI : MonoBehaviour {
         [SerializeField, Tooltip("The text to show number of delivered orders")]
         private TextMeshProUGUI deliveredOrdersCountText;
@@ -35,6 +36,13 @@ namespace Game.UI {
         }
 
 
+        /// <summary>
+        /// Shows or hides the Game Over UI
+        /// based on the current game state.
+        /// </summary>
+        /// <remarks>
+        /// Invoked when the <see cref="GameManager.OnStateChanged"/> event is triggered.
+        /// </remarks>
         private void OnGameStateChangedAction(object sender, GameManager.OnStateChangedArgs e) {
             var isActive = e.State == GameManager.State.GameOver;
             gameObject.SetActive(isActive);

@@ -4,6 +4,9 @@ using TMPro;
 using UnityEngine;
 
 namespace Game.UI.HUD {
+    /// <summary>
+    /// Controls the UI countdown animation and display shown before the game starts.
+    /// </summary>
     public class GameStartCountdownUI : MonoBehaviour {
         private static readonly int PopUpTrigger = Animator.StringToHash("PopUp");
 
@@ -20,6 +23,12 @@ namespace Game.UI.HUD {
         private int _previousNumber;
 
 
+        /// <summary>
+        /// Returns a positive modulus result, ensuring index wrapping for color selection.
+        /// </summary>
+        /// <param name="a">Dividend</param>
+        /// <param name="b">Divisor</param>
+        /// <returns>A positive integer representing (a % b)</returns>
         private static int PositiveMod(int a, int b) {
             var remainder = a % b;
             return remainder < 0 ? remainder + Math.Abs(b) : remainder;
@@ -37,6 +46,9 @@ namespace Game.UI.HUD {
             gameObject.SetActive(false);
         }
 
+        /// <summary>
+        /// Updates the countdown display and triggers animations when the number changes.
+        /// </summary>
         private void Update() {
             var countdownCeil = GetCountdownCeil();
             if (countdownCeil != _previousNumber) {
@@ -49,11 +61,21 @@ namespace Game.UI.HUD {
         }
 
 
+        /// <summary>
+        /// Handles showing or hiding the countdown UI based on game state.
+        /// </summary>
+        /// <remarks>
+        /// Invoked when the <see cref="GameManager.OnStateChanged"/> event is triggered.
+        /// </remarks>
         private void OnGameStateChangedAction(object sender, GameManager.OnStateChangedArgs e) {
             var isActive = e.State == GameManager.State.Countdown;
             gameObject.SetActive(isActive);
         }
 
+        /// <summary>
+        /// Gets the current countdown time rounded up to the nearest whole number.
+        /// </summary>
+        /// <returns>Ceiling integer of the current countdown time</returns>
         private int GetCountdownCeil() {
             var countdown = _gameManager.GetCountdownTime();
             return Mathf.CeilToInt(countdown);

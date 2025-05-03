@@ -2,12 +2,16 @@ using Unity.Netcode;
 using UnityEngine;
 
 namespace Game.Player {
+    /// <summary>
+    /// Controls the player's animation state.
+    /// </summary>
     [RequireComponent(typeof(Animator))]
     public class PlayerAnimator : NetworkBehaviour {
         private static readonly int IsWalking = Animator.StringToHash("IsWalking");
 
 
-        [SerializeField] private PlayerController playerController;
+        [SerializeField, Tooltip("The player controller")]
+        private PlayerController playerController;
 
 
         private Animator _animator;

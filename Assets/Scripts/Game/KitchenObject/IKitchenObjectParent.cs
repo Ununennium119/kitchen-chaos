@@ -2,6 +2,9 @@
 using UnityEngine;
 
 namespace Game.KitchenObject {
+    /// <summary>
+    /// Interface representing a parent entity capable of holding a kitchen object.
+    /// </summary>
     public interface IKitchenObjectParent {
         /// <returns>The position in which kitchen object is placed in the scene</returns>
         public Transform GetKitchenObjectFollowTransform();

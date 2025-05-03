@@ -18,7 +18,7 @@ namespace Game.Counter.Logic {
             Idle,
             Frying,
             Fried,
-            Burned,
+            Burned
         }
 
 

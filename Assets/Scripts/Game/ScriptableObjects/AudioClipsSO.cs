@@ -14,6 +14,5 @@ namespace Game.ScriptableObjects {
         public AudioClip[] objectDropAudioClips;
         public AudioClip[] trashAudioClips;
         public AudioClip[] warningAudioClips;
-        public AudioClip panSizzleAudioClip;
     }
 }

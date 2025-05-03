@@ -4,6 +4,7 @@ using System.Linq;
 using Unity.Netcode;
 using UnityEngine;
 using UnityEngine.SceneManagement;
+using Logger = Common.Utility.Logger;
 
 namespace Game.Manager {
     /// <summary>This class is responsible for managing game state.</summary>
@@ -13,28 +14,40 @@ namespace Game.Manager {
             WaitingToStart,
             Countdown,
             Playing,
-            GameOver,
+            GameOver
         }
 
 
         public static GameManager Instance { get; private set; }
 
 
+        /// <summary>
+        /// This event is triggered whenever the game state changes.
+        /// </summary>
         public event EventHandler<OnStateChangedArgs> OnStateChanged;
         public class OnStateChangedArgs : EventArgs {
             public State State;
         }
 
+        /// <summary>
+        /// This event is triggered whenever the local player toggles the pause state.
+        /// </summary>
         public event EventHandler<OnLocalPauseToggledArgs> OnLocalPauseToggled;
         public class OnLocalPauseToggledArgs : EventArgs {
             public bool IsGamePaused;
         }
 
+        /// <summary>
+        /// This event is triggered whenever the overall game pause state changes.
+        /// </summary>
         public event EventHandler<OnPauseToggledArgs> OnPauseToggled;
         public class OnPauseToggledArgs : EventArgs {
             public bool IsGamePaused;
         }
 
+        /// <summary>
+        /// This event is triggered whenever the local player's ready state changes.
+        /// </summary>
         public event EventHandler<OnLocalPlayerReadyChangedArgs> OnLocalPlayerReadyChanged;
         public class OnLocalPlayerReadyChangedArgs : EventArgs {
             public bool IsLocalPlayerReady;
@@ -43,7 +56,7 @@ namespace Game.Manager {
 
         [SerializeField, Tooltip("The player prefab")]
         private Transform playerPrefab;
-        
+
         [SerializeField, Tooltip("Duration of countdown")]
         private float countdownDuration = 3f;
         [SerializeField, Tooltip("Duration of game in \"Playing\" state")]
@@ -57,7 +70,7 @@ namespace Game.Manager {
         private readonly NetworkVariable<State> _state = new();
         private readonly NetworkVariable<float> _currentCountdownTime = new();
         private readonly NetworkVariable<float> _currentPlayTime = new();
-        private bool _isLocalGamePaused;
+        private bool _isLocalGamePaused = false;
         private bool _isLocalPlayerReady;
 
 
@@ -87,17 +100,16 @@ namespace Game.Manager {
             OnLocalPauseToggled?.Invoke(this, new OnLocalPauseToggledArgs { IsGamePaused = _isLocalGamePaused });
         }
 
-        public bool IsWaiting() {
-            return _state.Value == State.WaitingToStart;
-        }
-
 
         private void Awake() {
-            Debug.Log("Setting up GameManager...");
+            Logger.LogInitializingInstance(this);
             if (Instance != null) {
-                Debug.LogError("There is more than one GameManager in the scene!");
+                Logger.LogMultipleInstancesError(this);
+                Destroy(gameObject);
+                return;
             }
             Instance = this;
+            Logger.LogInstanceInitialized(this);
 
             _isLocalGamePaused = false;
         }
@@ -150,10 +162,16 @@ namespace Game.Manager {
         }
 
 
+        /// <remarks>
+        /// Invoked when the <see cref="InputManager.OnPausePerformed"/> event is triggered.
+        /// </remarks>
         private void OnPausePerformedPerformedAction(object sender, EventArgs e) {
             ToggleGamePause();
         }
 
+        /// <remarks>
+        /// Invoked when the <see cref="InputManager.OnInteractPerformed"/> event is triggered.
+        /// </remarks>
         private void OnInteractPerformedPerformedAction(object sender, EventArgs e) {
             if (_state.Value == State.WaitingToStart && !_isLocalGamePaused) {
                 _isLocalPlayerReady = true;
@@ -165,10 +183,16 @@ namespace Game.Manager {
             }
         }
 
+        /// <remarks>
+        /// Invoked when the <see cref="_state"/> value changes.
+        /// </remarks>
         private void OnStateValueChangedAction(State previousValue, State newValue) {
             OnStateChanged?.Invoke(this, new OnStateChangedArgs { State = newValue });
         }
 
+        /// <remarks>
+        /// Invoked when the <see cref="_isGamePaused"/> event is triggered.
+        /// </remarks>
         private void OnIsGamePausedChangedAction(bool previousValue, bool newValue) {
             if (newValue) {
                 Time.timeScale = 0f;
@@ -178,10 +202,16 @@ namespace Game.Manager {
             OnPauseToggled?.Invoke(this, new OnPauseToggledArgs { IsGamePaused = newValue });
         }
 
+        /// <remarks>
+        /// Invoked when the <see cref="NetworkManager.OnClientDisconnectCallback"/> event is triggered.
+        /// </remarks>
         private void OnClientDisconnectCallbackAction(ulong clientId) {
             CheckGamePaused();
         }
 
+        /// <remarks>
+        /// Invoked when the <see cref="NetworkSceneManager.OnLoadEventCompleted"/> event is triggered.
+        /// </remarks>
         private void OnLoadEventCompletedAction(
             string sceneName,
             LoadSceneMode loadSceneMode,
@@ -194,6 +224,9 @@ namespace Game.Manager {
             }
         }
 
+        /// <summary>
+        /// Server RPC that marks a player as ready.
+        /// </summary>
         [ServerRpc(RequireOwnership = false)]
         private void SetPlayerReadyServerRpc(ServerRpcParams serverRpcParams = default) {
             _playerReadyDictionary[serverRpcParams.Receive.SenderClientId] = true;
@@ -206,6 +239,9 @@ namespace Game.Manager {
             }
         }
 
+        /// <summary>
+        /// Server RPC that updates a client's pause state.
+        /// </summary>
         [ServerRpc(RequireOwnership = false)]
         private void SetGamePausedServerRpc(bool isPaused, ServerRpcParams serverRpcParams = default) {
             _gamePausedDictionary[serverRpcParams.Receive.SenderClientId] = isPaused;
@@ -213,6 +249,9 @@ namespace Game.Manager {
         }
 
 
+        /// <summary>
+        /// Aggregates pause states of all clients to determine the global game pause state.
+        /// </summary>
         private void CheckGamePaused() {
             var gamePausedList = NetworkManager.Singleton.ConnectedClientsIds.Select(
                 playerId => _gamePausedDictionary.TryGetValue(playerId, out var isGamePaused) && isGamePaused

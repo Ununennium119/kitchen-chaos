@@ -1,13 +1,16 @@
 using System;
-using Common;
 using Common.Logic;
 using Game.Counter.Logic;
 using Game.KitchenObject;
 using Game.Manager;
 using Unity.Netcode;
 using UnityEngine;
+using Logger = Common.Utility.Logger;
 
 namespace Game.Player {
+    /// <summary>
+    /// Manages player behavior including movement, interaction, and object handling.
+    /// </summary>
     /// <remarks>There is only one player controller per player.</remarks>
     public class PlayerController : NetworkBehaviour, IKitchenObjectParent {
         public static PlayerController LocalInstance { get; private set; }
@@ -34,6 +37,10 @@ namespace Game.Player {
         }
 
 
+        /// <summary>
+        /// Resets the static objects, specifically the OnTrash event.
+        /// This method is used to clean up the event subscription.
+        /// </summary>
         public static void ResetStaticObjects() {
             OnLocalPlayerNetworkSpawned = null;
             OnAnyObjectPickup = null;
@@ -166,16 +173,23 @@ namespace Game.Player {
             
             if (!IsOwner) return;
 
-            Debug.Log("Setting up PlayerController...");
+            Logger.LogInitializingInstance(this);
             if (LocalInstance != null) {
-                Debug.LogError("There is more than one PlayerController in the scene!");
+                Logger.LogMultipleInstancesError(this);
+                Destroy(gameObject);
+                return;
             }
             LocalInstance = this;
+            Logger.LogInstanceInitialized(this);
 
             OnLocalPlayerNetworkSpawned?.Invoke(this, EventArgs.Empty);
         }
 
 
+        /// <summary>
+        /// Handles player movement and collision logic.
+        /// </summary>
+        /// <param name="movementDirection">Direction of movement.</param>
         private void HandleMovement(Vector3 movementDirection) {
             // Rotate
             transform.forward = Vector3.Slerp(transform.forward, movementDirection, rotationSpeed * Time.deltaTime);
@@ -206,6 +220,11 @@ namespace Game.Player {
             transform.position += movement;
         }
 
+        /// <summary>
+        /// Determines if the player can move in the given direction without hitting a collision.
+        /// </summary>
+        /// <param name="movement">Direction to test.</param>
+        /// <returns>True if movement is allowed.</returns>
         private bool CanMove(Vector3 movement) {
             return !Physics.BoxCast(
                 center: transform.position,
@@ -217,6 +236,10 @@ namespace Game.Player {
             );
         }
 
+        
+        /// <summary>
+        /// Updates which counter the player is currently targeting.
+        /// </summary>
         private void UpdateSelectedCounter() {
             var didRaycastHit = Physics.Raycast(
                 transform.position,
@@ -237,7 +260,10 @@ namespace Game.Player {
             SetSelectedCounter(counter);
         }
 
-
+        /// <summary>
+        /// Sets the currently selected counter and triggers the corresponding event.
+        /// </summary>
+        /// <param name="counter">The counter to select.</param>
         private void SetSelectedCounter(BaseCounter counter) {
             _selectedCounter = counter;
             OnSelectedCounterChanged?.Invoke(
@@ -247,18 +273,36 @@ namespace Game.Player {
         }
 
 
+        /// <summary>
+        /// Handles interaction input event.
+        /// </summary>
+        /// <remarks>
+        /// Invoked when the <see cref="InputManager.OnInteractPerformed"/> event is triggered.
+        /// </remarks>
         private void OnInteractPerformedAction(object sender, EventArgs e) {
             if (!_gameManager.IsPlaying()) return;
 
             _selectedCounter?.Interact(this);
         }
 
+        /// <summary>
+        /// Handles alternate interaction input event.
+        /// </summary>
+        /// <remarks>
+        /// Invoked when the <see cref="InputManager.OnInteractAlternatePerformed"/> event is triggered.
+        /// </remarks>
         private void OnInteractAlternatePerformedAction(object sender, EventArgs e) {
             if (!_gameManager.IsPlaying()) return;
 
             _selectedCounter?.InteractAlternate();
         }
 
+        /// <summary>
+        /// Destroys any held kitchen object.
+        /// </summary>
+        /// <remarks>
+        /// Invoked when the <see cref="NetworkManager.OnClientDisconnectCallback"/> event is triggered.
+        /// </remarks>
         private void OnClientDisconnectCallbackAction(ulong clientId) {
             if (OwnerClientId == clientId) {
                 GetKitchenObject()?.DestroySelf();

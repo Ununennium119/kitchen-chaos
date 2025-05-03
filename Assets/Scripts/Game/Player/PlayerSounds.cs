@@ -3,6 +3,9 @@ using Game.Audio;
 using UnityEngine;
 
 namespace Game.Player {
+    /// <summary>
+    /// Manages footstep sounds for the player.
+    /// </summary>
     public class PlayerSounds : MonoBehaviour {
         [SerializeField, Tooltip("The duration between player walking sound effect")]
         private float footstepSoundCooldown = 0.5f;
@@ -25,6 +28,9 @@ namespace Game.Player {
             _soundEffectManager = SoundEffectManager.Instance;
         }
 
+        /// <summary>
+        /// Plays footstep sound if the player is walking and cooldown has expired.
+        /// </summary>
         private void Update() {
             _footstepSoundTime -= Time.deltaTime;
             if (_footstepSoundTime > 0f) return;
@@ -36,6 +42,12 @@ namespace Game.Player {
         }
 
 
+        /// <summary>
+        /// Sets the reference to the local <see cref="PlayerController"/>.
+        /// </summary>
+        /// <remarks>
+        /// Invoked when the <see cref="PlayerController.OnLocalPlayerNetworkSpawned"/> event is triggered.
+        /// </remarks>
         private void OnLocalPlayerNetworkSpawnedAction(object sender, EventArgs e) {
             _playerController = PlayerController.LocalInstance;
         }

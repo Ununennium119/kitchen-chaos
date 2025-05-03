@@ -4,8 +4,12 @@ using Game.Manager;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
+using Logger = Common.Utility.Logger;
 
 namespace Game.UI.PauseMenu {
+    /// <summary>
+    /// Handles the UI logic for the options menu, including volume control, input rebinding, and visibility management.
+    /// </summary>
     /// <remarks>This class is singleton.</remarks>
     public class OptionsMenuUI : MonoBehaviour {
         public static OptionsMenuUI Instance { get; private set; }
@@ -54,11 +58,14 @@ namespace Game.UI.PauseMenu {
 
 
         private void Awake() {
-            Debug.Log("Setting up OptionsMenuUI...");
+            Logger.LogInitializingInstance(this);
             if (Instance != null) {
-                Debug.LogError("There is more than one OptionsMenuUI in the scene!");
+                Logger.LogMultipleInstancesError(this);
+                Destroy(gameObject);
+                return;
             }
             Instance = this;
+            Logger.LogInstanceInitialized(this);
 
             musicVolumeButton.onClick.AddListener(() => {
                 _musicManager.ChangeVolume();
@@ -151,6 +158,9 @@ namespace Game.UI.PauseMenu {
         }
 
 
+        /// <remarks>
+        /// Invoked when the <see cref="GameManager.OnLocalPauseToggled"/> event is triggered.
+        /// </remarks>
         private void OnLocalPauseToggledAction(object sender, GameManager.OnLocalPauseToggledArgs e) {
             if (e.IsGamePaused) return;
 

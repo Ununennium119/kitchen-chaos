@@ -6,6 +6,9 @@ using Unity.Netcode;
 using UnityEngine;
 
 namespace Game.KitchenObject {
+    /// <summary>
+    /// Represents a plate that can hold other valid kitchen objects.
+    /// </summary>
     public class PlateKitchenObject : KitchenObject {
         /// <summary>
         /// This event is triggered whenever a kitchen object is added to the plate.
@@ -51,11 +54,19 @@ namespace Game.KitchenObject {
         }
 
 
+        /// <summary>
+        /// Server RPC that adds a kitchen object to the plate by index for all clients.
+        /// </summary>
+        /// <param name="kitchenObjectSOIndex">The index of the kitchen object in the master list.</param>
         [ServerRpc(RequireOwnership = false)]
         private void AddKitchenObjectSOServerRpc(int kitchenObjectSOIndex) {
             AddKitchenObjectSOClientRpc(kitchenObjectSOIndex);
         }
 
+        /// <summary>
+        /// Client RPC that adds a kitchen object to the plate for the client.
+        /// </summary>
+        /// <param name="kitchenObjectSOIndex">The index of the kitchen object in the master list.</param>
         [ClientRpc]
         private void AddKitchenObjectSOClientRpc(int kitchenObjectSOIndex) {
             var kitchenObjectSO = kitchenObjectListSO.kitchenObjectSOList[kitchenObjectSOIndex];

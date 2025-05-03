@@ -1,12 +1,13 @@
-﻿using Common;
-using Common.Logic;
-using Common.Utility;
+﻿using Common.Utility;
 using Game.Manager;
 using Unity.Netcode;
 using UnityEngine;
 using UnityEngine.UI;
 
 namespace Game.UI.PauseMenu {
+    /// <summary>
+    /// Handles the UI logic for the pause menu, including the resume, options, and main menu buttons.
+    /// </summary>
     public class PauseMenuUI : MonoBehaviour {
         [SerializeField, Tooltip("The resume button")]
         private Button resumeButton;
@@ -42,6 +43,9 @@ namespace Game.UI.PauseMenu {
         }
 
 
+        /// <remarks>
+        /// Invoked when the <see cref="GameManager.OnLocalPauseToggled"/> event is triggered.
+        /// </remarks>
         private void OnLocalPauseToggledAction(object sender, GameManager.OnLocalPauseToggledArgs e) {
             if (e.IsGamePaused) {
                 Show();
