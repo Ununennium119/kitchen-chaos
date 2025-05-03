@@ -2,12 +2,33 @@
 using UnityEngine;
 
 namespace Common.Logic {
+    /// <summary>
+    /// Makes the attached object follow the camera in various ways based on the selected mode.
+    /// </summary>
     public class FollowCamera : MonoBehaviour {
+        /// <summary>
+        /// Specifies the different modes of how the object follows the camera.
+        /// </summary>
         private enum Mode {
+            /// <summary>
+            /// The object rotates to always look at the camera.
+            /// </summary>
             LookAt,
+            
+            /// <summary>
+            /// The object rotates to look in the opposite direction of the camera.
+            /// </summary>
             LookAtInverse,
+            
+            /// <summary>
+            /// The object faces the same direction as the camera.
+            /// </summary>
             Forward,
-            ForwardInverse,
+            
+            /// <summary>
+            /// The object faces the opposite direction of the camera.
+            /// </summary>
+            ForwardInverse
         }
 
 

@@ -1,6 +1,9 @@
 ﻿using UnityEngine;
 
 namespace Common.Logic {
+    /// <summary>
+    /// Makes the game object to follow another transform's position and rotation.
+    /// </summary>
     public class FollowTransform : MonoBehaviour {
         private Transform _target;
 

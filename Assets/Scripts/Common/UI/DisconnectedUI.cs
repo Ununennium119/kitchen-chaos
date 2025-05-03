@@ -4,6 +4,9 @@ using UnityEngine;
 using UnityEngine.UI;
 
 namespace Common.UI {
+    /// <summary>
+    /// The UI displayed when the client is disconnected from the network.
+    /// </summary>
     public class DisconnectedUI : NetworkBehaviour {
         [SerializeField, Tooltip("The main menu button")]
         private Button mainMenuButton;
@@ -33,7 +36,9 @@ namespace Common.UI {
             gameObject.SetActive(false);
         }
 
-
+        /// <remarks>
+        /// Invoked when the <see cref="NetworkManager.OnClientDisconnectCallback"/> event is triggered.
+        /// </remarks>
         private void OnClientDisconnectCallback(ulong clientId) {
             if (clientId == NetworkManager.LocalClientId || clientId == NetworkManager.ServerClientId) {
                 Show();
