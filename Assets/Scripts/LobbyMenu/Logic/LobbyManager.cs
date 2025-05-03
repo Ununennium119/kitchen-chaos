@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using Common.Logic;
+using Common.Utility;
 using Unity.Netcode;
 using Unity.Netcode.Transports.UTP;
 using Unity.Services.Authentication;
@@ -11,7 +12,7 @@ using Unity.Services.Lobbies.Models;
 using Unity.Services.Relay;
 using Unity.Services.Relay.Models;
 using UnityEngine;
-using Logger = Common.Logic.Logger;
+using Logger = Common.Utility.Logger;
 
 namespace LobbyMenu.Logic {
     public class LobbyManager : MonoBehaviour {

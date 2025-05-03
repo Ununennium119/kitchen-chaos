@@ -2,9 +2,10 @@
 using System.Collections.Generic;
 using System.Linq;
 using Common.Logic;
+using Common.Utility;
 using LobbyMenu.Logic;
 using Unity.Netcode;
-using Logger = Common.Logic.Logger;
+using Logger = Common.Utility.Logger;
 
 namespace CharacterSelectMenu.Logic {
     /// <summary>

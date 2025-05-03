@@ -1,6 +1,6 @@
 using UnityEngine;
 
-namespace Common.Logic {
+namespace Common.Utility {
     /// <summary>
     /// A utility class for logging different types of repeating messages.
     /// </summary>
