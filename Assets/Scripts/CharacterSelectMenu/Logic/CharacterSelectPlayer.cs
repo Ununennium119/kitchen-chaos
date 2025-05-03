@@ -86,6 +86,9 @@ namespace CharacterSelectMenu.Logic {
         }
 
 
+        /// <remarks>
+        /// Invoked when the <see cref="MultiplayerManager.OnPlayerDataListChanged"/> event is triggered.
+        /// </remarks>
         private void OnPlayerDataListChangedAction(object sender, EventArgs e) {
             UpdatePlayerVisual();
         }
@@ -93,6 +96,9 @@ namespace CharacterSelectMenu.Logic {
         /// <summary>
         /// Updates the ready status indicator based on readiness state.
         /// </summary>
+        /// <remarks>
+        /// Invoked when the <see cref="CharacterSelectReadyManager.OnReadyChanged"/> event is triggered.
+        /// </remarks>
         private void OnReadyChangedAction(object sender, EventArgs e) {
             var isActive = false;
             if (_multiplayerManager.HasPlayerData(index)) {
