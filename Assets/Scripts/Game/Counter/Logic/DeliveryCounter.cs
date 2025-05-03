@@ -4,9 +4,12 @@ using Game.Player;
 using Unity.Netcode;
 
 namespace Game.Counter.Logic {
+    /// <summary>
+    /// Represents a counter where the player can deliver a plate after it has been prepared.
+    /// </summary>
     public class DeliveryCounter : BaseCounter {
         /// <summary>
-        /// This event is invoked whenever player delivers a dish successfully.
+        /// This event is triggered whenever player delivers a dish successfully.
         /// </summary>
         public event EventHandler OnDeliverySuccess;
 
@@ -18,7 +21,11 @@ namespace Game.Counter.Logic {
             _deliveryManager = DeliveryManager.Instance;
         }
 
-
+        /// <summary>
+        /// Handles the player's interaction with the delivery counter.
+        /// If the player has a plate, it attempts to deliver the plate to the DeliveryManager.
+        /// </summary>
+        /// <param name="playerController">The player who is interacting with the counter.</param>
         public override void Interact(PlayerController playerController) {
             var playerKitchenObject = playerController.GetKitchenObject();
             // Do nothing if player does not have plate
@@ -31,16 +38,25 @@ namespace Game.Counter.Logic {
             DeliverySuccessServerRpc();
         }
 
+        /// <summary>
+        /// Defines alternate interaction behavior. Currently, does nothing.
+        /// </summary>
         public override void InteractAlternate() {
             // Do Nothing
         }
 
 
+        /// <summary>
+        /// Server RPC that triggers <see cref="OnDeliverySuccess"/> event for all clients.
+        /// </summary>
         [ServerRpc(RequireOwnership = false)]
         private void DeliverySuccessServerRpc() {
             DeliverySuccessClientRpc();
         }
 
+        /// <summary>
+        /// Client RPC that triggers <see cref="OnDeliverySuccess"/> event for the client.
+        /// </summary>
         [ClientRpc]
         private void DeliverySuccessClientRpc() {
             OnDeliverySuccess?.Invoke(this, EventArgs.Empty);

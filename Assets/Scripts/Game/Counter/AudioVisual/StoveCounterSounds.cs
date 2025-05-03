@@ -5,6 +5,9 @@ using Game.UI.WorldSpace.Progress;
 using UnityEngine;
 
 namespace Game.Counter.AudioVisual {
+    /// <summary>
+    /// Handles the audio effects for the <see cref="stoveCounter"/>.
+    /// </summary>
     [RequireComponent(typeof(AudioSource))]
     public class StoveCounterSounds : MonoBehaviour {
         [SerializeField, Tooltip("The stove counter")]
@@ -35,6 +38,9 @@ namespace Game.Counter.AudioVisual {
             stoveCounter.OnProgressChanged += OnStoveProgressChangedAction;
         }
 
+        /// <summary>
+        /// Plays periodic warning sounds if warning is active and cooldown has expired.
+        /// </summary>
         private void Update() {
             if (!_isWarningActive) return;
 
@@ -46,6 +52,12 @@ namespace Game.Counter.AudioVisual {
         }
 
 
+        /// <summary>
+        /// Plays or stops the stove sound based on the new stove state.
+        /// </summary>
+        /// <remarks>
+        /// Invoked when the <see cref="StoveCounter.OnStateChanged"/> event is triggered.
+        /// </remarks>
         private void OnStoveStateChangedAction(object sender, StoveCounter.OnStateChangedArgs e) {
             _currentState = e.State;
             var playSound = new[] { StoveCounter.State.Frying, StoveCounter.State.Fried }.Contains(e.State);
@@ -56,6 +68,12 @@ namespace Game.Counter.AudioVisual {
             }
         }
 
+        /// <summary>
+        /// Activates the warning sound trigger if food is close to burning.
+        /// </summary>
+        /// <remarks>
+        /// Invoked when the <see cref="StoveCounter.OnProgressChanged"/> event is triggered.
+        /// </remarks>
         private void OnStoveProgressChangedAction(object sender, IHasProgress.OnProgressChangedArgs e) {
             // This condition is added because there were some cases were state changes before progress
             // and warning is shown: e.ProgressNormalized < 0.99f

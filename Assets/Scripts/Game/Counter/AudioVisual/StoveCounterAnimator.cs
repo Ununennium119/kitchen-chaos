@@ -3,6 +3,9 @@ using Game.Counter.Logic;
 using UnityEngine;
 
 namespace Game.Counter.AudioVisual {
+    /// <summary>
+    /// Controls the visual effects of the <see cref="stoveCounter"/> based on its state.
+    /// </summary>
     public class StoveCounterAnimator : MonoBehaviour {
         private readonly StoveCounter.State[] _onStates = { StoveCounter.State.Frying, StoveCounter.State.Fried };
 
@@ -20,6 +23,9 @@ namespace Game.Counter.AudioVisual {
         }
 
 
+        /// <remarks>
+        /// Invoked when the <see cref="StoveCounter.OnStateChanged"/> event is triggered.
+        /// </remarks>
         private void OnStoveStateChangedAction(object sender, StoveCounter.OnStateChangedArgs e) {
             var isOn = _onStates.Contains(e.State);
             stoveParticles.SetActive(isOn);

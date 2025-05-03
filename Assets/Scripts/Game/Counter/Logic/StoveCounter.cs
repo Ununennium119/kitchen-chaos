@@ -7,7 +7,13 @@ using Unity.Netcode;
 using UnityEngine;
 
 namespace Game.Counter.Logic {
+    /// <summary>
+    /// Represents a stove counter where players can fry and burn items based on frying recipes.
+    /// </summary>
     public class StoveCounter : BaseCounter, IHasProgress {
+        /// <summary>
+        /// Enumeration representing the different states of the stove.
+        /// </summary>
         public enum State {
             Idle,
             Frying,
@@ -17,7 +23,7 @@ namespace Game.Counter.Logic {
 
 
         /// <summary>
-        /// This event is invoked whenever state of the stove changes.
+        /// This event is triggered whenever state of the stove changes.
         /// </summary>
         public event EventHandler<OnStateChangedArgs> OnStateChanged;
         public class OnStateChangedArgs : EventArgs {
@@ -25,7 +31,7 @@ namespace Game.Counter.Logic {
         }
 
         /// <summary>
-        /// This event is invoked whenever progress of the frying changes.
+        /// This event is triggered whenever progress of the frying changes.
         /// </summary>
         public event EventHandler<IHasProgress.OnProgressChangedArgs> OnProgressChanged;
 
@@ -40,6 +46,11 @@ namespace Game.Counter.Logic {
         private readonly NetworkVariable<float> _burningTime = new();
 
 
+        /// <summary>
+        /// Handles the player's interaction with the stove counter.
+        /// If possible, swaps kitchen objects between player and counter.
+        /// </summary>
+        /// <param name="playerController">The player interacting with the stove.</param>
         public override void Interact(PlayerController playerController) {
             var playerKitchenObject = playerController.GetKitchenObject();
             var counterKitchenObject = GetKitchenObject();
@@ -87,6 +98,9 @@ namespace Game.Counter.Logic {
             }
         }
 
+        /// <summary>
+        /// Defines alternate interaction behavior. Currently, does nothing.
+        /// </summary>
         public override void InteractAlternate() {
             // Do Nothing
         }
@@ -104,6 +118,7 @@ namespace Game.Counter.Logic {
                 case State.Frying:
                     _fryingTime.Value += Time.deltaTime;
                     if (_fryingTime.Value >= _currentFryingRecipeSO.fryingTime) {
+                        // Transition to Fried state once frying is complete
                         ChangeStateServerRpc(State.Fried);
                         GetKitchenObject().DestroySelf();
                         KitchenObject.KitchenObject.SpawnKitchenObject(
@@ -115,6 +130,7 @@ namespace Game.Counter.Logic {
                 case State.Fried:
                     _burningTime.Value += Time.deltaTime;
                     if (_burningTime.Value >= _currentFryingRecipeSO.burningTime) {
+                        // Transition to Burned state once burning is complete
                         ChangeStateServerRpc(State.Burned);
                         GetKitchenObject().DestroySelf();
                         KitchenObject.KitchenObject.SpawnKitchenObject(
@@ -132,8 +148,8 @@ namespace Game.Counter.Logic {
         }
 
         public override void OnNetworkSpawn() {
-            _fryingTime.OnValueChanged += InvokeOnProgressChanged;
-            _burningTime.OnValueChanged += InvokeOnProgressChanged;
+            _fryingTime.OnValueChanged += TriggerOnProgressChanged;
+            _burningTime.OnValueChanged += TriggerOnProgressChanged;
         }
 
 
@@ -156,7 +172,13 @@ namespace Game.Counter.Logic {
             _burningTime.Value = 0;
         }
 
-        private void InvokeOnProgressChanged(float previousValue, float newValue) {
+        /// <summary>
+        /// Triggers <see cref="OnProgressChanged"/> event.
+        /// </summary>
+        /// <remarks>
+        /// Invoked when the frying or burning progress changes.
+        /// </remarks>
+        private void TriggerOnProgressChanged(float previousValue, float newValue) {
             var totalTime = _currentState switch {
                 State.Idle or State.Burned => 1,
                 State.Frying => _currentFryingRecipeSO != null ? _currentFryingRecipeSO.fryingTime : 1,
@@ -170,12 +192,20 @@ namespace Game.Counter.Logic {
         }
 
 
+        /// <summary>
+        /// Server RPC that changes the state of the stove.
+        /// </summary>
+        /// <param name="newState">The new state to change to.</param>
         [ServerRpc(RequireOwnership = false)]
         private void ChangeStateServerRpc(State newState) {
             ResetFryingAndBurningTimes();
             ChangeStateClientRpc(newState);
         }
 
+        /// <summary>
+        /// Client RPC that changes the state of the stove and triggers the state change event.
+        /// </summary>
+        /// <param name="newState">The new state to change to.</param>
         [ClientRpc]
         private void ChangeStateClientRpc(State newState) {
             _currentState = newState;
@@ -185,11 +215,19 @@ namespace Game.Counter.Logic {
             );
         }
 
+        /// <summary>
+        /// Server RPC that updates the frying recipe.
+        /// </summary>
+        /// <param name="index">The index of the frying recipe in the list.</param>
         [ServerRpc(RequireOwnership = false)]
         private void UpdateRecipeSOServerRpc(int index) {
             UpdateRecipeSOClientRpc(index);
         }
 
+        /// <summary>
+        /// Client RPC that updates the frying recipe.
+        /// </summary>
+        /// <param name="index">The index of the frying recipe in the list.</param>
         [ClientRpc]
         private void UpdateRecipeSOClientRpc(int index) {
             try {

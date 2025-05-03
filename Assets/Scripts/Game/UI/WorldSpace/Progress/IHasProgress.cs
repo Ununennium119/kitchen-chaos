@@ -8,7 +8,7 @@ namespace Game.UI.WorldSpace.Progress {
     /// <seealso cref="ProgressBarUI"/>
     public interface IHasProgress {
         /// <summary>
-        /// This event is invoked whenever progress of the game object changes.
+        /// This event is triggered whenever progress of the game object changes.
         /// </summary>
         public event EventHandler<OnProgressChangedArgs> OnProgressChanged;
 

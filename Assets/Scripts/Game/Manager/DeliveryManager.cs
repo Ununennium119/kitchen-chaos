@@ -16,22 +16,22 @@ namespace Game.Manager {
 
 
         /// <summary>
-        /// This event is invoked whenever a new order is spawned (created).
+        /// This event is triggered whenever a new order is spawned (created).
         /// </summary>
         public event EventHandler OnOrderSpawned;
 
         /// <summary>
-        /// This event is invoked whenever a new order is despawned.
+        /// This event is triggered whenever a new order is despawned.
         /// </summary>
         public event EventHandler OnOrderDeSpawned;
 
         /// <summary>
-        /// This event is invoked whenever a plate is delivered successfully.
+        /// This event is triggered whenever a plate is delivered successfully.
         /// </summary>
         public event EventHandler OnDeliverySuccess;
 
         /// <summary>
-        /// This event is invoked whenever player tries to deliver a non-matching plate.
+        /// This event is triggered whenever player tries to deliver a non-matching plate.
         /// </summary>
         public event EventHandler OnDeliveryFail;
 

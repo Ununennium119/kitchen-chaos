@@ -5,6 +5,9 @@ using Unity.Netcode;
 using UnityEngine;
 
 namespace Game.Counter.Logic {
+    /// <summary>
+    /// Base class for all counters.
+    /// </summary>
     public class BaseCounter : NetworkBehaviour, IKitchenObjectParent {
         [SerializeField, Tooltip("The position in which the kitchen object is placed in the scene")]
         private Transform counterTopPoint;
@@ -31,37 +34,37 @@ namespace Game.Counter.Logic {
         }
 
 
-        /// <inheritdoc cref="IKitchenObjectParent.GetKitchenObjectFollowTransform"/>
+        /// <inheritdoc/>
         /// <remark>Implementation of <see cref="IKitchenObjectParent.GetKitchenObjectFollowTransform"/>.</remark>
         public Transform GetKitchenObjectFollowTransform() {
             return counterTopPoint;
         }
 
-        /// <inheritdoc cref="IKitchenObjectParent.GetKitchenObject"/>
+        /// <inheritdoc/>
         /// <remark>Implementation of <see cref="IKitchenObjectParent.GetKitchenObject"/>.</remark>
         public KitchenObject.KitchenObject GetKitchenObject() {
             return _kitchenObject;
         }
 
-        /// <inheritdoc cref="IKitchenObjectParent.SetKitchenObject"/>
+        /// <inheritdoc/>
         /// <remark>Implementation of <see cref="IKitchenObjectParent.SetKitchenObject"/>.</remark>
         public void SetKitchenObject(KitchenObject.KitchenObject kitchenObject) {
             _kitchenObject = kitchenObject;
         }
 
-        /// <inheritdoc cref="IKitchenObjectParent.ClearKitchenObject"/>
+        /// <inheritdoc/>
         /// <remark>Implementation of <see cref="IKitchenObjectParent.ClearKitchenObject"/>.</remark>
         public void ClearKitchenObject() {
             _kitchenObject = null;
         }
 
-        /// <inheritdoc cref="IKitchenObjectParent.HasKitchenObject"/>
+        /// <inheritdoc/>
         /// <remark>Implementation of <see cref="IKitchenObjectParent.HasKitchenObject"/>.</remark>
         public bool HasKitchenObject() {
             return _kitchenObject is not null;
         }
 
-        /// <inheritdoc cref="IKitchenObjectParent.GetNetworkObject"/>
+        /// <inheritdoc/>
         /// <remark>Implementation of <see cref="IKitchenObjectParent.GetNetworkObject"/>.</remark>
         public NetworkObjectReference GetNetworkObject() {
             return NetworkObject;

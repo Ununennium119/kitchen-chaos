@@ -1,7 +1,6 @@
-﻿using Common;
-using Common.Logic;
-using Common.Utility;
+﻿using Common.Utility;
 using UnityEngine;
+using Logger = Common.Utility.Logger;
 
 namespace Game.Audio {
     /// <summary>
@@ -40,14 +39,22 @@ namespace Game.Audio {
 
 
         private void Awake() {
-            Debug.Log("Setting up MusicManager...");
+            Logger.LogInitializingInstance(this);
             if (Instance != null) {
-                Debug.LogError("There is more than one MusicManager in the scene!");
+                Logger.LogMultipleInstancesError(this);
+                Destroy(gameObject);
+                return;
             }
             Instance = this;
+            Logger.LogInstanceInitialized(this);
 
             _audioSource = gameObject.GetComponent<AudioSource>();
 
+            UpdateVolume();
+        }
+
+
+        private void UpdateVolume() {
             _volume = PlayerPrefsManager.GetMusicVolume(defaultValue: .5f);
             _audioSource.volume = _volume;
         }

@@ -304,9 +304,11 @@ namespace LobbyMenu.Logic {
 
 
         private void Awake() {
-            Logger.LogInstanceInitialized(this);
+            Logger.LogInitializingInstance(this);
             if (Instance != null) {
                 Logger.LogMultipleInstancesError(this);
+                Destroy(gameObject);
+                return;
             }
             Instance = this;
             Logger.LogInstanceInitialized(this);

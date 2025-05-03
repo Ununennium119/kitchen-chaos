@@ -13,12 +13,12 @@ namespace Game.Player {
         public static PlayerController LocalInstance { get; private set; }
 
         /// <summary>
-        /// This event is invoked whenever the local player network is spawned.
+        /// This event is triggered whenever the local player network is spawned.
         /// </summary>
         public static event EventHandler OnLocalPlayerNetworkSpawned;
 
         /// <summary>
-        /// This event is invoked whenever any player picks up an object.
+        /// This event is triggered whenever any player picks up an object.
         /// </summary>
         public static event EventHandler<OnAnyObjectPickupArgs> OnAnyObjectPickup;
         public class OnAnyObjectPickupArgs : EventArgs {
@@ -26,7 +26,7 @@ namespace Game.Player {
         }
 
         /// <summary>
-        /// This event is invoked whenever any player drops an object.
+        /// This event is triggered whenever any player drops an object.
         /// </summary>
         public static event EventHandler<OnAnyObjectDropArgs> OnAnyObjectDrop;
         public class OnAnyObjectDropArgs : EventArgs {
@@ -42,7 +42,7 @@ namespace Game.Player {
 
 
         /// <summary>
-        /// This event is invoked whenever the counter selected by the player changes.
+        /// This event is triggered whenever the counter selected by the player changes.
         /// </summary>
         public event EventHandler<OnSelectedCounterChangedArgs> OnSelectedCounterChanged;
         public class OnSelectedCounterChangedArgs : EventArgs {

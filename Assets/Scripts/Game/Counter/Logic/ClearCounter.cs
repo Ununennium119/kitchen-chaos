@@ -1,7 +1,16 @@
 using Game.KitchenObject;
 
 namespace Game.Counter.Logic {
+    /// <summary>
+    /// Represents a clear counter which can be used to place kitchen objects.
+    /// </summary>
     public class ClearCounter : BaseCounter {
+        /// <summary>
+        /// Handles the interaction between the player and the counter.
+        /// Depending on whether the player or the counter has a plate or kitchen object, 
+        /// it swaps or moves objects accordingly.
+        /// </summary>
+        /// <param name="playerController">The player interacting with the counter.</param>
         public override void Interact(Player.PlayerController playerController) {
             var playerKitchenObject = playerController.GetKitchenObject();
             var counterKitchenObject = GetKitchenObject();
@@ -42,6 +51,9 @@ namespace Game.Counter.Logic {
             counterKitchenObject?.SetParent(playerController);
         }
 
+        /// <summary>
+        /// Defines alternate interaction behavior. Currently, does nothing.
+        /// </summary>
         public override void InteractAlternate() {
             // Do Nothing
         }

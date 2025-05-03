@@ -8,7 +8,7 @@ using UnityEngine;
 namespace Game.KitchenObject {
     public class PlateKitchenObject : KitchenObject {
         /// <summary>
-        /// This event is invoked whenever a kitchen object is added to the plate.
+        /// This event is triggered whenever a kitchen object is added to the plate.
         /// </summary>
         public event EventHandler<OnKitchenObjectAddedArgs> OnKitchenObjectAdded;
         public class OnKitchenObjectAddedArgs : EventArgs {

@@ -7,9 +7,12 @@ using Unity.Netcode;
 using UnityEngine;
 
 namespace Game.Counter.Logic {
+    /// <summary>
+    /// Represents a cutting counter where the player can interact to cut kitchen objects based on recipes.
+    /// </summary>
     public class CuttingCounter : BaseCounter, IHasProgress {
         /// <summary>
-        /// This event is invoked whenever a cut is performed in any of the cutting counters.
+        /// This event is triggered whenever a cut is performed in any of the cutting counters.
         /// </summary>
         public static event EventHandler OnAnyCut;
 
@@ -20,12 +23,12 @@ namespace Game.Counter.Logic {
 
 
         /// <summary>
-        /// This event is invoked whenever progress (number of cuts) is changed.
+        /// This event is triggered whenever progress (number of cuts) is changed.
         /// </summary>
         public event EventHandler<IHasProgress.OnProgressChangedArgs> OnProgressChanged;
 
         /// <summary>
-        /// This event is invoked whenever a cut is performed in any of the cutting counters.
+        /// This event is triggered whenever a cut is performed in any of the cutting counters.
         /// </summary>
         public event EventHandler OnCut;
 
@@ -40,6 +43,12 @@ namespace Game.Counter.Logic {
         private int _numberOfCuts;
 
 
+        /// <summary>
+        /// Handles player interaction with the cutting counter.
+        /// If player doesn't have a kitchen object, or the kitchen object can be put on the cutting counter,
+        /// the player kitchen object and the counter kitchen object will be swapped.
+        /// </summary>
+        /// <param name="playerController">The player interacting with the counter.</param>
         public override void Interact(PlayerController playerController) {
             var playerKitchenObject = playerController.GetKitchenObject();
             var counterKitchenObject = GetKitchenObject();
@@ -71,6 +80,10 @@ namespace Game.Counter.Logic {
             UpdateNumberOfCutsServerRpc(0, 1, -1);
         }
 
+        /// <summary>
+        /// Handles the alternate interaction for the cutting counter.
+        /// A cut will be added to the kitchen object on the counter.
+        /// </summary>
         public override void InteractAlternate() {
             // Do nothing if there is no recipe for the counter's kitchen object
             var kitchenObjectSO = GetKitchenObject()?.GetKitchenObjectSO();
@@ -103,6 +116,9 @@ namespace Game.Counter.Logic {
         }
 
 
+        /// <summary>
+        /// Server RPC to update the number of cuts, progress, and finalize cutting if necessary.
+        /// </summary>
         [ServerRpc(RequireOwnership = false)]
         private void UpdateNumberOfCutsServerRpc(
             int numberOfCuts,
@@ -122,6 +138,9 @@ namespace Game.Counter.Logic {
             KitchenObject.KitchenObject.SpawnKitchenObject(GetKitchenObjectSO(outputKitchenObjectIndex), this);
         }
 
+        /// <summary>
+        /// Client RPC to update the number of cuts and notify progress change.
+        /// </summary>
         [ClientRpc]
         private void UpdateNumberOfCutsClientRpc(int numberOfCuts, int totalNumberOfCuts) {
             _numberOfCuts = numberOfCuts;
@@ -131,6 +150,9 @@ namespace Game.Counter.Logic {
             );
         }
 
+        /// <summary>
+        /// Client RPC to invoke the <see cref="OnCut"/> event.
+        /// </summary>
         [ClientRpc]
         private void InvokeOnCutClientRpc() {
             OnCut?.Invoke(this, EventArgs.Empty);
