@@ -1,11 +1,13 @@
-﻿using Common;
-using Common.Logic;
+﻿using Common.Logic;
 using Game.Counter.Logic;
 using Game.Player;
 using UnityEngine;
 using UnityEngine.UI;
 
 namespace MainMenu.UI {
+    /// <summary>
+    /// The UI for the main menu.
+    /// </summary>
     public class MainMenuUI : MonoBehaviour {
         [SerializeField, Tooltip("The play button")]
         private Button playButton;
@@ -24,8 +26,6 @@ namespace MainMenu.UI {
 
             // Resetting time scale
             Time.timeScale = 1f;
-
-            playButton.Select();
         }
     }
 }

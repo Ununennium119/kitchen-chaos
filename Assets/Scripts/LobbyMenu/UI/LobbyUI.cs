@@ -1,11 +1,13 @@
-﻿using Common;
-using Common.Logic;
+﻿using Common.Logic;
 using LobbyMenu.Logic;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
 namespace LobbyMenu.UI {
+    /// <summary>
+    /// The UI for the Lobby menu.
+    /// </summary>
     public class LobbyUI : MonoBehaviour {
         [SerializeField, Tooltip("The main menu button")]
         private Button mainMenuButton;
@@ -18,9 +20,9 @@ namespace LobbyMenu.UI {
         [SerializeField, Tooltip("The refresh lobby list button")]
         private Button refreshLobbyListButton;
 
-        [SerializeField, Tooltip("The create lobby Ui")]
+        [SerializeField, Tooltip("The create lobby UI")]
         private CreateLobbyUI createLobbyUI;
-        [SerializeField, Tooltip("The join lobby Ui")]
+        [SerializeField, Tooltip("The join lobby UI")]
         private JoinLobbyUI joinLobbyUI;
 
         [SerializeField, Tooltip("The player name input")]
@@ -39,11 +41,16 @@ namespace LobbyMenu.UI {
             quickJoinLobbyButton.onClick.AddListener(() => _lobbyManager.QuickJoinLobby());
             updateNameButton.onClick.AddListener(() => { PlayerPrefsManager.SetPlayerName(nameInput.text); });
 
-            nameInput.text = PlayerPrefsManager.GetPlayerName();
+            UpdatePlayerName();
         }
 
         private void Start() {
             _lobbyManager = LobbyManager.Instance;
+        }
+
+
+        private void UpdatePlayerName() {
+            nameInput.text = PlayerPrefsManager.GetPlayerName();
         }
     }
 }

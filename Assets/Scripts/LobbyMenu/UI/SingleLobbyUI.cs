@@ -1,9 +1,13 @@
 ﻿using LobbyMenu.Logic;
 using TMPro;
+using Unity.Services.Lobbies.Models;
 using UnityEngine;
 using UnityEngine.UI;
 
 namespace LobbyMenu.UI {
+    /// <summary>
+    /// Represents a single lobby item in the lobby list UI.
+    /// </summary>
     public class SingleLobbyUI : MonoBehaviour {
         [SerializeField, Tooltip("The lobby name text")]
         private TextMeshProUGUI lobbyName;
@@ -15,7 +19,11 @@ namespace LobbyMenu.UI {
         private string _lobbyId;
 
 
-        public void SetLobby(Unity.Services.Lobbies.Models.Lobby lobby) {
+        /// <summary>
+        /// Sets the lobby information, including the lobby name and ID.
+        /// </summary>
+        /// <param name="lobby">The <see cref="Lobby"/> object containing the lobby information.</param>
+        public void SetLobby(Lobby lobby) {
             lobbyName.text = lobby.Name;
             _lobbyId = lobby.Id;
         }

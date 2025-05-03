@@ -1,9 +1,11 @@
 ﻿using System;
-using Common;
 using Common.Logic;
 using UnityEngine;
 
 namespace LobbyMenu.UI {
+    /// <summary>
+    /// The UI for the "Connecting" screen during the process of joining a multiplayer lobby.
+    /// </summary>
     public class ConnectingUI : MonoBehaviour {
         private MultiplayerManager _multiplayerManager;
 
@@ -32,10 +34,16 @@ namespace LobbyMenu.UI {
         }
 
 
+        /// <remarks>
+        /// Invoked when the <see cref="MultiplayerManager.OnTryingToJoin"/> event is triggered.
+        /// </remarks>
         private void OnTryingToJoinAction(object sender, EventArgs e) {
             Show();
         }
 
+        /// <remarks>
+        /// Invoked when the <see cref="MultiplayerManager.OnFailedToJoin"/> event is triggered.
+        /// </remarks>
         private void OnFailedToJoinAction(object sender, EventArgs e) {
             Hide();
         }

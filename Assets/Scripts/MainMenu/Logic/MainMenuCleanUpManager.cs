@@ -1,11 +1,12 @@
-﻿using Common;
-using Common.Logic;
-using LobbyMenu;
+﻿using Common.Logic;
 using LobbyMenu.Logic;
 using Unity.Netcode;
 using UnityEngine;
 
 namespace MainMenu.Logic {
+    /// <summary>
+    /// This class handles the cleanup of "DontDestroyOnLoad" game objects when transitioning to the main menu scene.
+    /// </summary>
     public class MainMenuCleanUpManager : MonoBehaviour {
         private void Awake() {
             if (NetworkManager.Singleton != null) {

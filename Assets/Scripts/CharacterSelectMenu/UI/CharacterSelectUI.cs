@@ -8,7 +8,7 @@ using UnityEngine.UI;
 
 namespace CharacterSelectMenu.UI {
     /// <summary>
-    /// Handles the UI interactions for the character selection scene.
+    /// The UI for the character selection menu.
     /// </summary>
     public class CharacterSelectUI : NetworkBehaviour {
         [SerializeField, Tooltip("The main menu button")]

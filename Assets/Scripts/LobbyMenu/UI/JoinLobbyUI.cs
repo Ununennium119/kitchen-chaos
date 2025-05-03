@@ -5,6 +5,9 @@ using UnityEngine.EventSystems;
 using UnityEngine.UI;
 
 namespace LobbyMenu.UI {
+    /// <summary>
+    /// The UI for joining an existing multiplayer lobby.
+    /// </summary>
     public class JoinLobbyUI : MonoBehaviour {
         [SerializeField, Tooltip("The lobby code input")]
         private TMP_InputField lobbyCodeInput;
@@ -17,6 +20,9 @@ namespace LobbyMenu.UI {
         private LobbyManager _lobbyManager;
 
 
+        /// <summary>
+        /// Shows the UI for joining a lobby.
+        /// </summary>
         public void Show() {
             gameObject.SetActive(true);
             lobbyCodeInput.Select();

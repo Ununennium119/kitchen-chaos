@@ -5,6 +5,9 @@ using UnityEngine.EventSystems;
 using UnityEngine.UI;
 
 namespace LobbyMenu.UI {
+    /// <summary>
+    /// The UI for creating a new multiplayer lobby.
+    /// </summary>
     public class CreateLobbyUI : MonoBehaviour {
         [SerializeField, Tooltip("The lobby name input")]
         private TMP_InputField lobbyNameInput;
@@ -19,6 +22,9 @@ namespace LobbyMenu.UI {
         private LobbyManager _lobbyManager;
         
 
+        /// <summary>
+        /// Shows the UI for creating a new lobby.
+        /// </summary>
         public void Show() {
             gameObject.SetActive(true);
             lobbyNameInput.Select();
