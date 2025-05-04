@@ -1,4 +1,5 @@
 using System;
+using System.Diagnostics.CodeAnalysis;
 using Common.Logic;
 using Game.Counter.Logic;
 using Game.KitchenObject;
@@ -86,8 +87,10 @@ namespace Game.Player {
         private InputManager _inputManager;
         private MultiplayerManager _multiplayerManager;
         private bool _isWalking;
-        private BaseCounter _selectedCounter;
         private KitchenObject.KitchenObject _kitchenObject;
+
+        private BaseCounter _selectedCounter;
+        private readonly NetworkVariable<NetworkObjectReference> _selectedCounterRef = new();
 
 
         /// <returns>true if player is walking</returns>
@@ -152,15 +155,13 @@ namespace Game.Player {
         }
 
         private void Update() {
-            if (!IsOwner) return;
+            if (IsOwner) {
+                var movementVector = _inputManager.GetPlayerMovementVectorNormalized();
+                SendMovementVectorServerRpc(movementVector);
 
-            // Calculate movement direction and update walking
-            var movementVector = _inputManager.GetPlayerMovementVectorNormalized();
-            var movementDirection = new Vector3(movementVector.x, 0, movementVector.y);
-            _isWalking = movementDirection != Vector3.zero;
-
-            HandleMovement(movementDirection);
-            UpdateSelectedCounter();
+                // Update walking
+                _isWalking = movementVector != Vector2.zero;
+            }
         }
 
         public override void OnNetworkSpawn() {
@@ -170,7 +171,7 @@ namespace Game.Player {
                 transform.position = spawnPositions[playerDataIndex];
                 NetworkManager.Singleton.OnClientDisconnectCallback += OnClientDisconnectCallbackAction;
             }
-            
+
             if (!IsOwner) return;
 
             Logger.LogInitializingInstance(this);
@@ -183,93 +184,6 @@ namespace Game.Player {
             Logger.LogInstanceInitialized(this);
 
             OnLocalPlayerNetworkSpawned?.Invoke(this, EventArgs.Empty);
-        }
-
-
-        /// <summary>
-        /// Handles player movement and collision logic.
-        /// </summary>
-        /// <param name="movementDirection">Direction of movement.</param>
-        private void HandleMovement(Vector3 movementDirection) {
-            // Rotate
-            transform.forward = Vector3.Slerp(transform.forward, movementDirection, rotationSpeed * Time.deltaTime);
-
-            // Check collision and change movement direction based on it
-            if (!CanMove(movementDirection)) {
-                // Cannot move towards movement direction
-                // Test movement on the x-axis
-                var xMovementDirection = new Vector3(movementDirection.x, 0, 0).normalized;
-                if (movementDirection.x is > 0.5f or < -0.5f && CanMove(xMovementDirection)) {
-                    // Can only move on the x-axis
-                    movementDirection = xMovementDirection;
-                } else {
-                    // Test movement on the z-axis
-                    var zMovementDirection = new Vector3(0, 0, movementDirection.z).normalized;
-                    if (movementDirection.z is < -0.5f or > 0.5f && CanMove(zMovementDirection)) {
-                        // Can only move on the z-axis
-                        movementDirection = zMovementDirection;
-                    } else {
-                        // Cannot move in any direction
-                        movementDirection = Vector3.zero;
-                    }
-                }
-            }
-
-            // Move
-            var movement = movementDirection * (speed * Time.deltaTime);
-            transform.position += movement;
-        }
-
-        /// <summary>
-        /// Determines if the player can move in the given direction without hitting a collision.
-        /// </summary>
-        /// <param name="movement">Direction to test.</param>
-        /// <returns>True if movement is allowed.</returns>
-        private bool CanMove(Vector3 movement) {
-            return !Physics.BoxCast(
-                center: transform.position,
-                halfExtents: Vector3.one * radius,
-                direction: movement,
-                orientation: Quaternion.identity,
-                maxDistance: speed * Time.deltaTime,
-                layerMask: collisionsLayerMask
-            );
-        }
-
-        
-        /// <summary>
-        /// Updates which counter the player is currently targeting.
-        /// </summary>
-        private void UpdateSelectedCounter() {
-            var didRaycastHit = Physics.Raycast(
-                transform.position,
-                transform.forward,
-                out var hitInfo,
-                interactDistance,
-                counterLayerMask
-            );
-            if (!didRaycastHit) {
-                SetSelectedCounter(null);
-                return;
-            }
-            if (!hitInfo.transform.TryGetComponent(out BaseCounter counter)) {
-                SetSelectedCounter(null);
-                return;
-            }
-
-            SetSelectedCounter(counter);
-        }
-
-        /// <summary>
-        /// Sets the currently selected counter and triggers the corresponding event.
-        /// </summary>
-        /// <param name="counter">The counter to select.</param>
-        private void SetSelectedCounter(BaseCounter counter) {
-            _selectedCounter = counter;
-            OnSelectedCounterChanged?.Invoke(
-                this,
-                new OnSelectedCounterChangedArgs { SelectedCounter = _selectedCounter }
-            );
         }
 
 
@@ -307,6 +221,133 @@ namespace Game.Player {
             if (OwnerClientId == clientId) {
                 GetKitchenObject()?.DestroySelf();
             }
+        }
+
+
+        // --- CLIENT LOGIC ---
+
+        [ClientRpc]
+        private void TriggerOnSelectedCounterChangedClientRpc(
+            [SuppressMessage("ReSharper", "UnusedParameter.Local")]
+            ClientRpcParams clientRpcParams = default
+        ) {
+            if (!_selectedCounterRef.Value.TryGet(out var counterNetworkObject)) {
+                counterNetworkObject = null;
+            }
+            var counter = counterNetworkObject?.GetComponent<BaseCounter>();
+            OnSelectedCounterChanged?.Invoke(
+                this,
+                new OnSelectedCounterChangedArgs { SelectedCounter = counter }
+            );
+        }
+
+
+        // --- SERVER LOGIC ---
+
+        /// <summary>
+        /// Sends movement vector to the server.
+        /// </summary>
+        /// <param name="movementVector">Movement vector.</param>
+        [ServerRpc(RequireOwnership = false)]
+        private void SendMovementVectorServerRpc(Vector2 movementVector) {
+            var movementDirection = new Vector3(movementVector.x, 0, movementVector.y);
+            HandleMovement(movementDirection);
+        }
+
+
+        /// <summary>
+        /// Handles player movement and collision logic.
+        /// </summary>
+        /// <param name="movementDirection">Direction of movement.</param>
+        private void HandleMovement(Vector3 movementDirection) {
+            // Rotate
+            transform.forward = Vector3.Slerp(transform.forward, movementDirection, rotationSpeed * Time.deltaTime);
+
+            // Check collision and change movement direction based on it
+            if (!CanMove(movementDirection)) {
+                // Cannot move towards movement direction
+                // Test movement on the x-axis
+                var xMovementDirection = new Vector3(movementDirection.x, 0, 0).normalized;
+                if (movementDirection.x is > 0.5f or < -0.5f && CanMove(xMovementDirection)) {
+                    // Can only move on the x-axis
+                    movementDirection = xMovementDirection;
+                } else {
+                    // Test movement on the z-axis
+                    var zMovementDirection = new Vector3(0, 0, movementDirection.z).normalized;
+                    if (movementDirection.z is < -0.5f or > 0.5f && CanMove(zMovementDirection)) {
+                        // Can only move on the z-axis
+                        movementDirection = zMovementDirection;
+                    } else {
+                        // Cannot move in any direction
+                        movementDirection = Vector3.zero;
+                    }
+                }
+            }
+
+            // Move
+            var movement = movementDirection * (speed * Time.deltaTime);
+            transform.position += movement;
+
+            UpdateSelectedCounter();
+        }
+
+        /// <summary>
+        /// Determines if the player can move in the given direction without hitting a collision.
+        /// </summary>
+        /// <param name="movement">Direction to test.</param>
+        /// <returns>True if movement is allowed.</returns>
+        private bool CanMove(Vector3 movement) {
+            return !Physics.BoxCast(
+                center: transform.position,
+                halfExtents: Vector3.one * radius,
+                direction: movement,
+                orientation: Quaternion.identity,
+                maxDistance: speed * Time.deltaTime,
+                layerMask: collisionsLayerMask
+            );
+        }
+
+        /// <summary>
+        /// Updates which counter the player is currently targeting.
+        /// </summary>
+        private void UpdateSelectedCounter() {
+            var didRaycastHit = Physics.Raycast(
+                transform.position,
+                transform.forward,
+                out var hitInfo,
+                interactDistance,
+                counterLayerMask
+            );
+            if (!didRaycastHit) {
+                SetSelectedCounter(null);
+                return;
+            }
+            if (!hitInfo.transform.TryGetComponent(out BaseCounter counter)) {
+                SetSelectedCounter(null);
+                return;
+            }
+
+            SetSelectedCounter(counter);
+        }
+
+        /// <summary>
+        /// Sets the currently selected counter and triggers the corresponding event.
+        /// </summary>
+        /// <param name="counter">The counter to select.</param>
+        private void SetSelectedCounter(BaseCounter counter) {
+            _selectedCounter = counter;
+            _selectedCounterRef.Value = counter
+                ? counter.GetNetworkObject()
+                : default;
+
+            // Only for owner client
+            TriggerOnSelectedCounterChangedClientRpc(
+                new ClientRpcParams {
+                    Send = new ClientRpcSendParams {
+                        TargetClientIds = new[] { OwnerClientId }
+                    }
+                }
+            );
         }
     }
 }
