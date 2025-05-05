@@ -19,8 +19,6 @@ namespace Game.Counter.Logic {
             var playerKitchenObject = playerController.GetKitchenObject();
             var counterKitchenObject = GetKitchenObject();
 
-            Debug.Log("Here");
-
             // Handle plate logic
             PlateKitchenObject playerPlateKitchenObject = null;
             PlateKitchenObject counterPlateKitchenObject = null;
@@ -49,16 +47,12 @@ namespace Game.Counter.Logic {
                     }
                 }
             }
-            
-            Debug.Log("Here 2");
 
             // Otherwise swap kitchen objects of the player and the counter 
             playerKitchenObject?.ClearParent();
             counterKitchenObject?.ClearParent();
-            Debug.Log("Here 3");
             playerKitchenObject?.SetParent(this);
             counterKitchenObject?.SetParent(playerController);
-            Debug.Log("Here 4");
         }
 
         /// <summary>

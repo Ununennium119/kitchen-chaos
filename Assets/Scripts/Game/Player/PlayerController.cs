@@ -205,7 +205,6 @@ namespace Game.Player {
             if (!_gameManager.IsPlaying()) return;
 
             InteractPerformedServerRpc();
-            _selectedCounter?.Interact(this);
         }
 
         /// <summary>
@@ -217,7 +216,7 @@ namespace Game.Player {
         private void OnInteractAlternatePerformedAction(object sender, EventArgs e) {
             if (!_gameManager.IsPlaying()) return;
 
-            HandleAlternateInteractServerRpc();
+            AlternateInteractPerformedServerRpc();
         }
 
         /// <summary>
@@ -374,7 +373,7 @@ namespace Game.Player {
         /// Sends alternate interact performed action to the server.
         /// </summary>
         [ServerRpc]
-        private void HandleAlternateInteractServerRpc() {
+        private void AlternateInteractPerformedServerRpc() {
             if (!_gameManager.IsPlaying()) return;
             
             _selectedCounter?.InteractAlternate();

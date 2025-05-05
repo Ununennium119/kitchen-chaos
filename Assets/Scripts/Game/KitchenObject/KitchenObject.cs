@@ -69,15 +69,11 @@ namespace Game.KitchenObject {
                 return;
             }
 
-            Debug.Log("Here 5");
-
             newParent.SetKitchenObject(this);
             var followTransform = GetComponent<FollowTransform>();
             followTransform.SetTargetTransform(newParent.GetKitchenObjectFollowTransform());
             transform.localPosition = Vector3.zero;
             _parent = newParent;
-
-            Debug.Log("Here 6");
 
             // Update clients
             SetParentClientRpc(newParent.GetNetworkObject());

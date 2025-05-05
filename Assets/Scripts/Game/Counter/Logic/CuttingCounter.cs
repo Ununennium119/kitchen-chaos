@@ -128,28 +128,28 @@ namespace Game.Counter.Logic {
         private void UpdateNumberOfCuts(
             int numberOfCuts,
             int totalNumberOfCuts,
-            KitchenObjectSO kitchenObjectSO
+            KitchenObjectSO outputKitchenObjectSO
         ) {
             _numberOfCuts.Value = numberOfCuts;
-            InvokeOnProgressChangedClientRpc(totalNumberOfCuts);
+            InvokeOnProgressChangedClientRpc(numberOfCuts, totalNumberOfCuts);
 
-            if (kitchenObjectSO == null) return;
+            if (outputKitchenObjectSO == null) return;
             if (numberOfCuts < totalNumberOfCuts) return;
 
             // Cutting is completed
             GetKitchenObject().DestroySelf();
-            KitchenObject.KitchenObject.SpawnKitchenObject(kitchenObjectSO, this);
+            KitchenObject.KitchenObject.SpawnKitchenObject(outputKitchenObjectSO, this);
         }
 
         /// <summary>
         /// Client RPC to invoke <see cref="OnProgressChanged"/> event.
         /// </summary>
         [ClientRpc]
-        private void InvokeOnProgressChangedClientRpc(int totalNumberOfCuts) {
+        private void InvokeOnProgressChangedClientRpc(int numberOfCuts, int totalNumberOfCuts) {
             OnProgressChanged?.Invoke(
                 this,
                 new IHasProgress.OnProgressChangedArgs {
-                    ProgressNormalized = (float)_numberOfCuts.Value / totalNumberOfCuts
+                    ProgressNormalized = (float)numberOfCuts / totalNumberOfCuts
                 }
             );
         }
