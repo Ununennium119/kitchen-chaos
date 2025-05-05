@@ -25,6 +25,9 @@ namespace LobbyMenu.Logic {
 
         [SerializeField, Tooltip("The network connection type")]
         private ConnectionType connectionType;
+        
+        [SerializeField, Tooltip("Specifies whether to use relay")]
+        private bool useRelay = false;
 
 
         /// <summary>
@@ -148,23 +151,20 @@ namespace LobbyMenu.Logic {
                     }
                 );
 
-                var relayAllocation = await AllocateRelay();
-                var relayJoinCode = await GetRelayJoinCode(relayAllocation);
-                await LobbyService.Instance.UpdateLobbyAsync(_joinedLobby.Id, new UpdateLobbyOptions {
-                    Data = new Dictionary<string, DataObject> {
-                        {
-                            RELAY_JOIN_CODE_KEY, new DataObject(
-                                DataObject.VisibilityOptions.Member,
-                                relayJoinCode
-                            )
+                if (useRelay) {
+                    var relayAllocation = await AllocateRelay();
+                    var relayJoinCode = await GetRelayJoinCode(relayAllocation);
+                    await LobbyService.Instance.UpdateLobbyAsync(_joinedLobby.Id, new UpdateLobbyOptions {
+                        Data = new Dictionary<string, DataObject> {
+                            {
+                                RELAY_JOIN_CODE_KEY, new DataObject(
+                                    DataObject.VisibilityOptions.Member,
+                                    relayJoinCode
+                                )
+                            }
                         }
-                    }
-                });
-                Debug.Log(
-                    $"{relayJoinCode}, {relayAllocation.Region}, {relayAllocation.ServerEndpoints}, {relayAllocation.AllocationId}, {relayAllocation.RelayServer}");
-                NetworkManager.Singleton.GetComponent<UnityTransport>().SetRelayServerData(
-                    relayAllocation.ToRelayServerData(connectionType.GetValue())
-                );
+                    });
+                }
 
                 MultiplayerManager.Instance.StartHost();
                 SceneLoader.LoadNetwork(SceneLoader.Scene.CharacterSelectScene);
@@ -184,7 +184,9 @@ namespace LobbyMenu.Logic {
 
                 _joinedLobby = await LobbyService.Instance.JoinLobbyByCodeAsync(lobbyCode);
 
-                await JoinRelay();
+                if (useRelay) {
+                    await JoinRelay();
+                }
 
                 MultiplayerManager.Instance.StartClient();
                 SceneLoader.LoadNetwork(SceneLoader.Scene.CharacterSelectScene);
@@ -204,7 +206,9 @@ namespace LobbyMenu.Logic {
 
                 _joinedLobby = await LobbyService.Instance.JoinLobbyByIdAsync(lobbyId);
 
-                await JoinRelay();
+                if (useRelay) {
+                    await JoinRelay();
+                }
 
                 MultiplayerManager.Instance.StartClient();
                 SceneLoader.LoadNetwork(SceneLoader.Scene.CharacterSelectScene);
@@ -223,7 +227,9 @@ namespace LobbyMenu.Logic {
 
                 _joinedLobby = await LobbyService.Instance.QuickJoinLobbyAsync();
 
-                await JoinRelay();
+                if (useRelay) {
+                    await JoinRelay();
+                }
 
                 MultiplayerManager.Instance.StartClient();
                 SceneLoader.LoadNetwork(SceneLoader.Scene.CharacterSelectScene);
