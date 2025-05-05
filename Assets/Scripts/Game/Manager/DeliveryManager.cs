@@ -49,11 +49,6 @@ namespace Game.Manager {
         private readonly List<OrderRecipeSO> _waitingOrderRecipeSOList = new();
         private int _deliveredOrdersCount;
         private bool _isDeliveryActive;
-        /// <summary>
-        /// List of delivered plate indices.
-        /// This list is used to prevent delivering the same plate multiple times.
-        /// </summary>
-        private readonly List<int> _deliveredPlateIndices = new();
 
 
         /// <summary>
@@ -61,6 +56,9 @@ namespace Game.Manager {
         /// </summary>
         /// <param name="plateKitchenObject">The plate kitchen object</param>
         /// <returns>true if plate is delivered successfully</returns>
+        /// <remarks>
+        /// Should only be called from server.
+        /// </remarks>
         public bool DeliverPlate(PlateKitchenObject plateKitchenObject) {
             OrderRecipeSO deliveredWaitingOrderRecipeSO = null;
             var deliveredWaitingOrderIndex = -1;
@@ -83,11 +81,15 @@ namespace Game.Manager {
                 break;
             }
             if (deliveredWaitingOrderRecipeSO == null) {
-                FailedDeliveryServerRpc();
+                // Update clients
+                FailedDeliveryClientRpc();
+
                 return false;
             }
 
-            SuccessfulDeliveryServerRpc(deliveredWaitingOrderIndex, plateKitchenObject.Index);
+            // Update clients
+            SuccessfullyDeliveryClientRpc(deliveredWaitingOrderIndex);
+
             return true;
         }
 
@@ -155,36 +157,15 @@ namespace Game.Manager {
 
 
         /// <summary>
-        /// Server RPC that handles delivery success on the server for all clients.
-        /// </summary>
-        /// <param name="orderIndex">Index of the successfully matched order.</param>
-        /// <param name="plateIndex">Index of the plate kitchen object</param>
-        [ServerRpc(RequireOwnership = false)]
-        private void SuccessfulDeliveryServerRpc(int orderIndex, int plateIndex) {
-            if (_deliveredPlateIndices.Contains(plateIndex)) return;
-
-            _deliveredPlateIndices.Add(plateIndex);
-            SuccessfullyDeliveryClientRpc(orderIndex);
-        }
-
-        /// <summary>
-        /// Server RPC that delivery failure on the server for all clients.
-        /// </summary>
-        [ServerRpc(RequireOwnership = false)]
-        private void FailedDeliveryServerRpc() {
-            FailedDeliveryClientRpc();
-        }
-
-        /// <summary>
         /// Client RPC that notifies handles a successful delivery for the client.
         /// </summary>
         /// <param name="orderIndex">Index of the successfully delivered order.</param>
         [ClientRpc]
         private void SuccessfullyDeliveryClientRpc(int orderIndex) {
+            _deliveredOrdersCount += 1;
             _waitingOrderRecipeSOList.RemoveAt(orderIndex);
             OnOrderDeSpawned?.Invoke(this, EventArgs.Empty);
             OnDeliverySuccess?.Invoke(this, EventArgs.Empty);
-            _deliveredOrdersCount += 1;
         }
 
         /// <summary>

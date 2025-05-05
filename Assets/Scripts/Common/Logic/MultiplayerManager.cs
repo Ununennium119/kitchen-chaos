@@ -46,25 +46,12 @@ namespace Common.Logic {
 
 
         private readonly NetworkList<PlayerData> _playerDataList = new();
-        
+
         /// <summary>
         /// Index of the next spawned plate.
         /// </summary>
         private readonly NetworkVariable<int> _nextPlateIndex = new();
 
-
-        /// <summary>
-        /// Spawns and adds a kitchen object to the parent by calling a server RPC.
-        /// </summary>
-        /// <param name="kitchenObjectSO">Scriptable object of the kitchen object</param>
-        /// <param name="parent">The parent to add kitchen object to</param>
-        public void SpawnKitchenObject(
-            KitchenObjectSO kitchenObjectSO,
-            IKitchenObjectParent parent
-        ) {
-            var index = GetKitchenObjectSOIndex(kitchenObjectSO);
-            SpawnKitchenObjectServerRpc(index, parent.GetNetworkObject());
-        }
 
         /// <summary>
         /// Starts the client and attempts to join the server.
@@ -206,15 +193,6 @@ namespace Common.Logic {
         }
 
 
-        private int GetKitchenObjectSOIndex(KitchenObjectSO kitchenObjectSO) {
-            return kitchenObjectListSO.kitchenObjectSOList.IndexOf(kitchenObjectSO);
-        }
-
-        private KitchenObjectSO GetKitchenObjectSO(int kitchenObjectSOIndex) {
-            return kitchenObjectListSO.kitchenObjectSOList[kitchenObjectSOIndex];
-        }
-
-
         /// <summary>
         /// Checks whether a specific player color is available.
         /// </summary>
@@ -239,24 +217,6 @@ namespace Common.Logic {
             return -1;
         }
 
-
-        /// <summary>
-        /// Server RPC that spawns a kitchen object and attaches it to a specified parent.
-        /// </summary>
-        /// <param name="index">The index of the kitchen object scriptable object to spawn.</param>
-        /// <param name="parentNetworkObjectReference">The network reference to the parent object.</param>
-        [ServerRpc(RequireOwnership = false)]
-        private void SpawnKitchenObjectServerRpc(int index, NetworkObjectReference parentNetworkObjectReference) {
-            parentNetworkObjectReference.TryGet(out var parentNetworkObject);
-            var parent = parentNetworkObject.GetComponent<IKitchenObjectParent>();
-
-            var kitchenObjectSO = GetKitchenObjectSO(index);
-            var kitchenObjectTransform = Instantiate(kitchenObjectSO.prefab);
-            var kitchenObjectNetworkObject = kitchenObjectTransform.GetComponent<NetworkObject>();
-            kitchenObjectNetworkObject.Spawn();
-
-            kitchenObjectTransform.GetComponent<KitchenObject>().SetParent(parent);
-        }
 
         /// <summary>
         /// Server RPC that destroys a kitchen object on the network.

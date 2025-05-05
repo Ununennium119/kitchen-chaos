@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using Common.Logic;
 using Game.ScriptableObjects;
 using Unity.Netcode;
 using UnityEngine;
@@ -11,13 +10,6 @@ namespace Game.KitchenObject {
     /// Represents a plate that can hold other valid kitchen objects.
     /// </summary>
     public class PlateKitchenObject : KitchenObject {
-        /// <summary>
-        /// Index of the plate.
-        /// The index is used to prevent a plate from being delivered multiple times.
-        /// </summary>
-        public int Index { get; private set; }
-
-
         /// <summary>
         /// This event is triggered whenever a kitchen object is added to the plate.
         /// </summary>
@@ -34,7 +26,7 @@ namespace Game.KitchenObject {
         private KitchenObjectListSO kitchenObjectListSO;
 
 
-        private List<KitchenObjectSO> _kitchenObjectSOList = new();
+        private readonly List<KitchenObjectSO> _kitchenObjectSOList = new();
 
 
         /// <returns>List of scriptable object of the kitchen objects this plate contains</returns>
@@ -42,38 +34,30 @@ namespace Game.KitchenObject {
             return _kitchenObjectSOList;
         }
 
+
+        // --- SERVER LOGIC ---
+
         /// <summary>
         /// Tries to add the kitchen object to the plate.
         /// </summary>
         /// <param name="kitchenObjectSO">Scriptable object of the kitchen object to add</param>
         /// <returns>true if kitchen object is added</returns>
+        /// <remarks>
+        /// Should only be called in the server.
+        /// </remarks>
         public bool TryAddKitchenObject(KitchenObjectSO kitchenObjectSO) {
             if (!validKitchenObjects.Contains(kitchenObjectSO)) return false;
             if (_kitchenObjectSOList.Contains(kitchenObjectSO)) return false;
 
+            // Update clients
             var kitchenObjectSOIndex = kitchenObjectListSO.kitchenObjectSOList.IndexOf(kitchenObjectSO);
-            AddKitchenObjectSOServerRpc(kitchenObjectSOIndex);
+            AddKitchenObjectSOClientRpc(kitchenObjectSOIndex);
+
             return true;
         }
 
 
-        private void Start() {
-            Index = MultiplayerManager.Instance.GetPlateIndex();
-        }
-
-
-        /// <summary>
-        /// Server RPC that adds a kitchen object to the plate by index for all clients.
-        /// </summary>
-        /// <param name="kitchenObjectSOIndex">The index of the kitchen object in the master list.</param>
-        [ServerRpc(RequireOwnership = false)]
-        private void AddKitchenObjectSOServerRpc(int kitchenObjectSOIndex) {
-            var kitchenObjectSO = kitchenObjectListSO.kitchenObjectSOList[kitchenObjectSOIndex];
-            if (!validKitchenObjects.Contains(kitchenObjectSO)) return;
-            if (_kitchenObjectSOList.Contains(kitchenObjectSO)) return;
-
-            AddKitchenObjectSOClientRpc(kitchenObjectSOIndex);
-        }
+        // --- CLIENT LOGIC ---
 
         /// <summary>
         /// Client RPC that adds a kitchen object to the plate for the client.

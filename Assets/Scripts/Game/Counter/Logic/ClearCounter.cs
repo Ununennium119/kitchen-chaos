@@ -1,4 +1,5 @@
 using Game.KitchenObject;
+using UnityEngine;
 
 namespace Game.Counter.Logic {
     /// <summary>
@@ -11,9 +12,14 @@ namespace Game.Counter.Logic {
         /// it swaps or moves objects accordingly.
         /// </summary>
         /// <param name="playerController">The player interacting with the counter.</param>
+        /// <remarks>
+        /// Should only be called in the server.
+        /// </remarks>
         public override void Interact(Player.PlayerController playerController) {
             var playerKitchenObject = playerController.GetKitchenObject();
             var counterKitchenObject = GetKitchenObject();
+
+            Debug.Log("Here");
 
             // Handle plate logic
             PlateKitchenObject playerPlateKitchenObject = null;
@@ -43,12 +49,16 @@ namespace Game.Counter.Logic {
                     }
                 }
             }
+            
+            Debug.Log("Here 2");
 
             // Otherwise swap kitchen objects of the player and the counter 
             playerKitchenObject?.ClearParent();
             counterKitchenObject?.ClearParent();
+            Debug.Log("Here 3");
             playerKitchenObject?.SetParent(this);
             counterKitchenObject?.SetParent(playerController);
+            Debug.Log("Here 4");
         }
 
         /// <summary>

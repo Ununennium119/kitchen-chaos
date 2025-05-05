@@ -69,9 +69,9 @@ namespace Game.Player {
         [Header("Interaction")]
         [SerializeField, Tooltip("Maximum distance in which player can select and interact with things")]
         private float interactDistance = 2f;
-        [SerializeField, Tooltip("The layer of the containers")]
+        [SerializeField, Tooltip("The layer mask of the containers")]
         private LayerMask counterLayerMask;
-        [SerializeField, Tooltip("The layer of the object which player should collide with")]
+        [SerializeField, Tooltip("The layer mask of the object which player should collide with")]
         private LayerMask collisionsLayerMask;
 
         [Header("Other")]
@@ -89,6 +89,12 @@ namespace Game.Player {
         private bool _isWalking;
         private KitchenObject.KitchenObject _kitchenObject;
 
+        /// <summary>
+        /// The selected counter.
+        /// </summary>
+        /// <remarks>
+        /// This field is only set in the server.
+        /// </remarks>
         private BaseCounter _selectedCounter;
         private readonly NetworkVariable<NetworkObjectReference> _selectedCounterRef = new();
 
@@ -146,8 +152,10 @@ namespace Game.Player {
             _gameManager = GameManager.Instance;
             _inputManager = InputManager.Instance;
 
-            _inputManager.OnInteractPerformed += OnInteractPerformedAction;
-            _inputManager.OnInteractAlternatePerformed += OnInteractAlternatePerformedAction;
+            if (IsOwner) {
+                _inputManager.OnInteractPerformed += OnInteractPerformedAction;
+                _inputManager.OnInteractAlternatePerformed += OnInteractAlternatePerformedAction;
+            }
 
             var playerData = _multiplayerManager.GetPlayerData(OwnerClientId);
             var color = _multiplayerManager.GetPlayerColor(playerData.ColorIndex);
@@ -196,6 +204,7 @@ namespace Game.Player {
         private void OnInteractPerformedAction(object sender, EventArgs e) {
             if (!_gameManager.IsPlaying()) return;
 
+            InteractPerformedServerRpc();
             _selectedCounter?.Interact(this);
         }
 
@@ -208,7 +217,7 @@ namespace Game.Player {
         private void OnInteractAlternatePerformedAction(object sender, EventArgs e) {
             if (!_gameManager.IsPlaying()) return;
 
-            _selectedCounter?.InteractAlternate();
+            HandleAlternateInteractServerRpc();
         }
 
         /// <summary>
@@ -229,7 +238,7 @@ namespace Game.Player {
         [ClientRpc]
         private void TriggerOnSelectedCounterChangedClientRpc(
             [SuppressMessage("ReSharper", "UnusedParameter.Local")]
-            ClientRpcParams clientRpcParams = default
+            ClientRpcParams rpcParams = default
         ) {
             if (!_selectedCounterRef.Value.TryGet(out var counterNetworkObject)) {
                 counterNetworkObject = null;
@@ -248,7 +257,7 @@ namespace Game.Player {
         /// Sends movement vector to the server.
         /// </summary>
         /// <param name="movementVector">Movement vector.</param>
-        [ServerRpc(RequireOwnership = false)]
+        [ServerRpc]
         private void SendMovementVectorServerRpc(Vector2 movementVector) {
             var movementDirection = new Vector3(movementVector.x, 0, movementVector.y);
             HandleMovement(movementDirection);
@@ -348,6 +357,27 @@ namespace Game.Player {
                     }
                 }
             );
+        }
+
+
+        /// <summary>
+        /// Sends interact performed action to the server.
+        /// </summary>
+        [ServerRpc]
+        private void InteractPerformedServerRpc() {
+            if (!_gameManager.IsPlaying()) return;
+            
+            _selectedCounter?.Interact(this);
+        }
+
+        /// <summary>
+        /// Sends alternate interact performed action to the server.
+        /// </summary>
+        [ServerRpc]
+        private void HandleAlternateInteractServerRpc() {
+            if (!_gameManager.IsPlaying()) return;
+            
+            _selectedCounter?.InteractAlternate();
         }
     }
 }

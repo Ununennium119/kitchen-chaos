@@ -25,6 +25,7 @@ namespace Game.Counter.Logic {
         /// Otherwise, if the player doesn't have a kitchen object, a kitchen object will be added to player.
         /// </summary>
         /// <param name="playerController">The player interacting with the counter.</param>
+        /// <remarks>Should only be called from server.</remarks>
         public override void Interact(PlayerController playerController) {
             var playerKitchenObject = playerController.GetKitchenObject();
 
@@ -41,7 +42,8 @@ namespace Game.Counter.Logic {
 
             // Add kitchen object to the player
             KitchenObject.KitchenObject.SpawnKitchenObject(kitchenObjectSO, playerController);
-            InvokeOnContainerOpenedServerRpc();
+
+            InvokeOnContainerOpenedClientRpc();
         }
 
         /// <summary>
@@ -51,14 +53,6 @@ namespace Game.Counter.Logic {
             // Do Nothing
         }
 
-
-        /// <summary>
-        /// Server RPC that triggers the <see cref="OnContainerOpened"/> event for all clients.
-        /// </summary>
-        [ServerRpc(RequireOwnership = false)]
-        private void InvokeOnContainerOpenedServerRpc() {
-            InvokeOnContainerOpenedClientRpc();
-        }
 
         /// <summary>
         /// Client RPC that triggers the <see cref="OnContainerOpened"/> event on the client.

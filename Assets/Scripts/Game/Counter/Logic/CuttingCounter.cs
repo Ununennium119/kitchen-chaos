@@ -44,7 +44,7 @@ namespace Game.Counter.Logic {
         private KitchenObjectListSO kitchenObjectListSO;
 
 
-        private int _numberOfCuts;
+        private readonly NetworkVariable<int> _numberOfCuts = new();
 
 
         /// <summary>
@@ -53,6 +53,9 @@ namespace Game.Counter.Logic {
         /// the player kitchen object and the counter kitchen object will be swapped.
         /// </summary>
         /// <param name="playerController">The player interacting with the counter.</param>
+        /// <remarks>
+        /// Should only be called from server.
+        /// </remarks>
         public override void Interact(PlayerController playerController) {
             var playerKitchenObject = playerController.GetKitchenObject();
             var counterKitchenObject = GetKitchenObject();
@@ -81,13 +84,16 @@ namespace Game.Counter.Logic {
             counterKitchenObject?.SetParent(playerController);
 
             // Reset number of cuts
-            UpdateNumberOfCutsServerRpc(0, 1, -1);
+            UpdateNumberOfCuts(0, 1, null);
         }
 
         /// <summary>
         /// Handles the alternate interaction for the cutting counter.
         /// A cut will be added to the kitchen object on the counter.
         /// </summary>
+        /// <remarks>
+        /// Should only be called from server.
+        /// </remarks>
         public override void InteractAlternate() {
             // Do nothing if there is no recipe for the counter's kitchen object
             var kitchenObjectSO = GetKitchenObject()?.GetKitchenObjectSO();
@@ -95,11 +101,12 @@ namespace Game.Counter.Logic {
             if (recipeSO == null) return;
 
             // Increment number of cuts
-            UpdateNumberOfCutsServerRpc(
-                _numberOfCuts + 1,
+            UpdateNumberOfCuts(
+                _numberOfCuts.Value + 1,
                 recipeSO.totalCuts,
-                GetIndexOfKitchenObjectSO(recipeSO.output)
+                recipeSO.output
             );
+            InvokeOnCutClientRpc();
         }
 
 
@@ -111,46 +118,39 @@ namespace Game.Counter.Logic {
             return GetRecipe(kitchenObjectSO) != null;
         }
 
-        private int GetIndexOfKitchenObjectSO(KitchenObjectSO kitchenObjectSO) {
-            return kitchenObjectListSO.kitchenObjectSOList.IndexOf(kitchenObjectSO);
-        }
-
-        private KitchenObjectSO GetKitchenObjectSO(int index) {
-            return kitchenObjectListSO.kitchenObjectSOList[index];
-        }
-
 
         /// <summary>
-        /// Server RPC to update the number of cuts, progress, and finalize cutting if necessary.
+        /// Updates the number of cuts, progress, and finalizes cutting if necessary.
         /// </summary>
-        [ServerRpc(RequireOwnership = false)]
-        private void UpdateNumberOfCutsServerRpc(
+        /// <remarks>
+        /// Should only be called from the server.
+        /// </remarks>
+        private void UpdateNumberOfCuts(
             int numberOfCuts,
             int totalNumberOfCuts,
-            int outputKitchenObjectIndex
+            KitchenObjectSO kitchenObjectSO
         ) {
-            UpdateNumberOfCutsClientRpc(numberOfCuts, totalNumberOfCuts);
+            _numberOfCuts.Value = numberOfCuts;
+            InvokeOnProgressChangedClientRpc(totalNumberOfCuts);
 
-            if (outputKitchenObjectIndex == -1) return;
-
-            InvokeOnCutClientRpc();
-
+            if (kitchenObjectSO == null) return;
             if (numberOfCuts < totalNumberOfCuts) return;
 
             // Cutting is completed
             GetKitchenObject().DestroySelf();
-            KitchenObject.KitchenObject.SpawnKitchenObject(GetKitchenObjectSO(outputKitchenObjectIndex), this);
+            KitchenObject.KitchenObject.SpawnKitchenObject(kitchenObjectSO, this);
         }
 
         /// <summary>
-        /// Client RPC to update the number of cuts and notify progress change.
+        /// Client RPC to invoke <see cref="OnProgressChanged"/> event.
         /// </summary>
         [ClientRpc]
-        private void UpdateNumberOfCutsClientRpc(int numberOfCuts, int totalNumberOfCuts) {
-            _numberOfCuts = numberOfCuts;
+        private void InvokeOnProgressChangedClientRpc(int totalNumberOfCuts) {
             OnProgressChanged?.Invoke(
                 this,
-                new IHasProgress.OnProgressChangedArgs { ProgressNormalized = (float)_numberOfCuts / totalNumberOfCuts }
+                new IHasProgress.OnProgressChangedArgs {
+                    ProgressNormalized = (float)_numberOfCuts.Value / totalNumberOfCuts
+                }
             );
         }
 
