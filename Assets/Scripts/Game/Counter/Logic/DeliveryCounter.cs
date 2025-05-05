@@ -14,7 +14,19 @@ namespace Game.Counter.Logic {
         public event EventHandler OnDeliverySuccess;
 
 
+        /// <remarks>
+        /// This field is only set in the server.
+        /// </remarks>
         private DeliveryManager _deliveryManager;
+
+        
+        // --- SERVER LOGIC ---
+
+        private void Start() {
+            if (IsServer) {
+                _deliveryManager = DeliveryManager.Instance;
+            }
+        }
 
 
         /// <summary>
@@ -46,11 +58,8 @@ namespace Game.Counter.Logic {
             // Do Nothing
         }
 
-
-        private void Start() {
-            _deliveryManager = DeliveryManager.Instance;
-        }
-
+        
+        // --- CLIENT LOGIC ---
 
         /// <summary>
         /// Client RPC that triggers <see cref="OnDeliverySuccess"/> event for the client.

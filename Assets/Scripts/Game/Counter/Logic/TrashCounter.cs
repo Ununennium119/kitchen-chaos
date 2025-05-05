@@ -21,6 +21,8 @@ namespace Game.Counter.Logic {
             OnTrash = null;
         }
 
+        
+        // --- SERVER LOGIC ---
 
         /// <summary>
         /// Handles the player's interaction with the trash counter.
@@ -46,6 +48,8 @@ namespace Game.Counter.Logic {
             // Do Nothing
         }
 
+        
+        // --- CLIENT LOGIC ---
 
         /// <summary>
         /// Client RPC that triggers the <see cref="OnTrash" /> event for the client.

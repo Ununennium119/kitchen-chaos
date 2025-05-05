@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using Common.Utility;
-using Game.KitchenObject;
 using Game.Player;
 using Game.ScriptableObjects;
 using Unity.Netcode;
@@ -47,11 +46,6 @@ namespace Common.Logic {
 
         private readonly NetworkList<PlayerData> _playerDataList = new();
 
-        /// <summary>
-        /// Index of the next spawned plate.
-        /// </summary>
-        private readonly NetworkVariable<int> _nextPlateIndex = new();
-
 
         /// <summary>
         /// Starts the client and attempts to join the server.
@@ -71,14 +65,6 @@ namespace Common.Logic {
             NetworkManager.Singleton.OnClientConnectedCallback += HostOnClientConnectedCallback;
             NetworkManager.Singleton.OnClientDisconnectCallback += HostOnClientDisconnectCallbackAction;
             NetworkManager.Singleton.StartHost();
-        }
-
-        /// <summary>
-        /// Removes the kitchen object from its parent and destroys itself by calling a server RPC.
-        /// </summary>
-        /// <param name="kitchenObject">The kitchen object to destroy</param>
-        public void DestroyKitchenObject(KitchenObject kitchenObject) {
-            DestroyKitchenObjectServerRpc(kitchenObject.NetworkObject);
         }
 
 
@@ -166,17 +152,6 @@ namespace Common.Logic {
         }
 
 
-        /// <summary>
-        /// Gets next plate index and then increments it.
-        /// </summary>
-        /// <returns>Next plate index</returns>
-        public int GetPlateIndex() {
-            var index = _nextPlateIndex.Value;
-            IncrementPlateIndexServerRpc();
-            return index;
-        }
-
-
         private void Awake() {
             Logger.LogInitializingInstance(this);
             if (Instance != null) {
@@ -219,17 +194,6 @@ namespace Common.Logic {
 
 
         /// <summary>
-        /// Server RPC that destroys a kitchen object on the network.
-        /// </summary>
-        /// <param name="kitchenObjectNetworkObjectReference">The network object reference of the kitchen object to destroy.</param>
-        [ServerRpc(RequireOwnership = false)]
-        private void DestroyKitchenObjectServerRpc(NetworkObjectReference kitchenObjectNetworkObjectReference) {
-            kitchenObjectNetworkObjectReference.TryGet(out var kitchenObjectNetworkObject);
-            kitchenObjectNetworkObject?.Despawn();
-        }
-
-
-        /// <summary>
         /// Server RPC that changes the color of a player's avatar.
         /// </summary>
         /// <param name="colorIndex">The index of the new color to assign to the player.</param>
@@ -251,21 +215,16 @@ namespace Common.Logic {
         /// <param name="playerId">The new player ID.</param>
         /// <param name="serverRpcParams">The parameters for the RPC call, including the client ID of the sender.</param>
         [ServerRpc(RequireOwnership = false)]
-        private void ChangePlayerNameAndIdServerRpc(string playerName, string playerId,
-            ServerRpcParams serverRpcParams) {
+        private void ChangePlayerNameAndIdServerRpc(
+            string playerName,
+            string playerId,
+            ServerRpcParams serverRpcParams
+        ) {
             var playerDataIndex = GetPlayerDataIndex(serverRpcParams.Receive.SenderClientId);
             var playerData = _playerDataList[playerDataIndex];
             playerData.Name = playerName;
             playerData.PlayerId = playerId;
             _playerDataList[playerDataIndex] = playerData;
-        }
-
-        /// <summary>
-        /// Server RPC to increment next plate index.
-        /// </summary>
-        [ServerRpc(RequireOwnership = false)]
-        private void IncrementPlateIndexServerRpc() {
-            _nextPlateIndex.Value++;
         }
 
 

@@ -44,8 +44,13 @@ namespace Game.Counter.Logic {
         private KitchenObjectListSO kitchenObjectListSO;
 
 
-        private readonly NetworkVariable<int> _numberOfCuts = new();
+        /// <remarks>
+        /// This field is only updated in the server.
+        /// </remarks>
+        private int _numberOfCuts;
 
+
+        // --- SERVER LOGIC ---
 
         /// <summary>
         /// Handles player interaction with the cutting counter.
@@ -102,22 +107,12 @@ namespace Game.Counter.Logic {
 
             // Increment number of cuts
             UpdateNumberOfCuts(
-                _numberOfCuts.Value + 1,
+                _numberOfCuts + 1,
                 recipeSO.totalCuts,
                 recipeSO.output
             );
             InvokeOnCutClientRpc();
         }
-
-
-        private CuttingRecipeSO GetRecipe(KitchenObjectSO kitchenObjectSO) {
-            return cuttingRecipeSOArray.FirstOrDefault(cuttingRecipe => cuttingRecipe.input == kitchenObjectSO);
-        }
-
-        private bool HasRecipe(KitchenObjectSO kitchenObjectSO) {
-            return GetRecipe(kitchenObjectSO) != null;
-        }
-
 
         /// <summary>
         /// Updates the number of cuts, progress, and finalizes cutting if necessary.
@@ -130,7 +125,7 @@ namespace Game.Counter.Logic {
             int totalNumberOfCuts,
             KitchenObjectSO outputKitchenObjectSO
         ) {
-            _numberOfCuts.Value = numberOfCuts;
+            _numberOfCuts = numberOfCuts;
             InvokeOnProgressChangedClientRpc(numberOfCuts, totalNumberOfCuts);
 
             if (outputKitchenObjectSO == null) return;
@@ -140,6 +135,9 @@ namespace Game.Counter.Logic {
             GetKitchenObject().DestroySelf();
             KitchenObject.KitchenObject.SpawnKitchenObject(outputKitchenObjectSO, this);
         }
+
+
+        // --- CLIENT LOGIC ---
 
         /// <summary>
         /// Client RPC to invoke <see cref="OnProgressChanged"/> event.
@@ -161,6 +159,15 @@ namespace Game.Counter.Logic {
         private void InvokeOnCutClientRpc() {
             OnCut?.Invoke(this, EventArgs.Empty);
             OnAnyCut?.Invoke(this, EventArgs.Empty);
+        }
+
+
+        private CuttingRecipeSO GetRecipe(KitchenObjectSO kitchenObjectSO) {
+            return cuttingRecipeSOArray.FirstOrDefault(cuttingRecipe => cuttingRecipe.input == kitchenObjectSO);
+        }
+
+        private bool HasRecipe(KitchenObjectSO kitchenObjectSO) {
+            return GetRecipe(kitchenObjectSO) != null;
         }
     }
 }

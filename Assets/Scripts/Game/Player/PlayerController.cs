@@ -83,11 +83,27 @@ namespace Game.Player {
         private PlayerVisual playerVisual;
 
 
+        /// <remarks>
+        /// This field is only set in the server.
+        /// </remarks>
         private GameManager _gameManager;
+
+        /// <remarks>
+        /// This field is only set in the owner.
+        /// </remarks>
         private InputManager _inputManager;
-        private MultiplayerManager _multiplayerManager;
+
+        /// <remarks>
+        /// This field is only updated in the owner.
+        /// </remarks>
         private bool _isWalking;
+
+        /// <remarks>
+        /// This field is only updated in the server.
+        /// </remarks>
         private KitchenObject.KitchenObject _kitchenObject;
+
+        private MultiplayerManager _multiplayerManager;
 
         /// <summary>
         /// The selected counter.
@@ -99,60 +115,13 @@ namespace Game.Player {
         private readonly NetworkVariable<NetworkObjectReference> _selectedCounterRef = new();
 
 
-        /// <returns>true if player is walking</returns>
-        public bool IsWalking() {
-            return _isWalking;
-        }
-
-
-        /// <inheritdoc cref="IKitchenObjectParent.GetKitchenObjectFollowTransform"/>
-        /// <remark>Implementation of <see cref="IKitchenObjectParent.GetKitchenObjectFollowTransform"/>.</remark>
-        public Transform GetKitchenObjectFollowTransform() {
-            return holdPoint;
-        }
-
-        /// <inheritdoc cref="IKitchenObjectParent.GetKitchenObject"/>
-        /// <remark>Implementation of <see cref="IKitchenObjectParent.GetKitchenObject"/>.</remark>
-        public KitchenObject.KitchenObject GetKitchenObject() {
-            return _kitchenObject;
-        }
-
-        /// <inheritdoc cref="IKitchenObjectParent.SetKitchenObject"/>
-        /// <remark>Implementation of <see cref="IKitchenObjectParent.SetKitchenObject"/>.</remark>
-        public void SetKitchenObject(KitchenObject.KitchenObject kitchenObject) {
-            if (kitchenObject is not null) {
-                OnAnyObjectPickup?.Invoke(this, new OnAnyObjectPickupArgs { Position = transform.position });
-            }
-            _kitchenObject = kitchenObject;
-        }
-
-        /// <inheritdoc cref="IKitchenObjectParent.ClearKitchenObject"/>
-        /// <remark>Implementation of <see cref="IKitchenObjectParent.ClearKitchenObject"/>.</remark>
-        public void ClearKitchenObject() {
-            if (_kitchenObject is not null) {
-                OnAnyObjectDrop?.Invoke(this, new OnAnyObjectDropArgs { Position = transform.position });
-            }
-            _kitchenObject = null;
-        }
-
-        /// <inheritdoc cref="IKitchenObjectParent.HasKitchenObject"/>
-        /// <remark>Implementation of <see cref="IKitchenObjectParent.HasKitchenObject"/>.</remark>
-        public bool HasKitchenObject() {
-            return _kitchenObject is not null;
-        }
-
-        /// <inheritdoc cref="IKitchenObjectParent.GetNetworkObject"/>
-        /// <remark>Implementation of <see cref="IKitchenObjectParent.GetNetworkObject"/>.</remark>
-        public NetworkObjectReference GetNetworkObject() {
-            return NetworkObject;
-        }
-
-
         private void Start() {
-            _gameManager = GameManager.Instance;
-            _inputManager = InputManager.Instance;
+            if (IsServer) {
+                _gameManager = GameManager.Instance;
+            }
 
             if (IsOwner) {
+                _inputManager = InputManager.Instance;
                 _inputManager.OnInteractPerformed += OnInteractPerformedAction;
                 _inputManager.OnInteractAlternatePerformed += OnInteractAlternatePerformedAction;
             }
@@ -180,18 +149,72 @@ namespace Game.Player {
                 NetworkManager.Singleton.OnClientDisconnectCallback += OnClientDisconnectCallbackAction;
             }
 
-            if (!IsOwner) return;
+            if (IsOwner) {
+                Logger.LogInitializingInstance(this);
+                if (LocalInstance != null) {
+                    Logger.LogMultipleInstancesError(this);
+                    Destroy(gameObject);
+                    return;
+                }
+                LocalInstance = this;
+                Logger.LogInstanceInitialized(this);
 
-            Logger.LogInitializingInstance(this);
-            if (LocalInstance != null) {
-                Logger.LogMultipleInstancesError(this);
-                Destroy(gameObject);
-                return;
+                OnLocalPlayerNetworkSpawned?.Invoke(this, EventArgs.Empty);
             }
-            LocalInstance = this;
-            Logger.LogInstanceInitialized(this);
+        }
 
-            OnLocalPlayerNetworkSpawned?.Invoke(this, EventArgs.Empty);
+
+        /// <returns>true if player is walking</returns>
+        /// <remarks>Only valid for the owner because <see cref="_isWalking"/> is only updated in the owner</remarks>
+        public bool IsWalking() {
+            return _isWalking;
+        }
+
+
+        /// <inheritdoc cref="IKitchenObjectParent.GetKitchenObjectFollowTransform"/>
+        /// <remark>Implementation of <see cref="IKitchenObjectParent.GetKitchenObjectFollowTransform"/>.</remark>
+        public Transform GetKitchenObjectFollowTransform() {
+            return holdPoint;
+        }
+
+        /// <inheritdoc cref="IKitchenObjectParent.GetKitchenObject"/>
+        /// <remark>Implementation of <see cref="IKitchenObjectParent.GetKitchenObject"/>.</remark>
+        public KitchenObject.KitchenObject GetKitchenObject() {
+            return _kitchenObject;
+        }
+
+        /// <inheritdoc cref="IKitchenObjectParent.SetKitchenObject"/>
+        /// <remark>Implementation of <see cref="IKitchenObjectParent.SetKitchenObject"/>.</remark>
+        public void SetKitchenObject(KitchenObject.KitchenObject kitchenObject) {
+            _kitchenObject = kitchenObject;
+
+            // Notify Clients
+            if (kitchenObject is not null) {
+                TriggerOnAnyObjectPickupClientRpc();
+            }
+        }
+
+        /// <inheritdoc cref="IKitchenObjectParent.ClearKitchenObject"/>
+        /// <remark>Implementation of <see cref="IKitchenObjectParent.ClearKitchenObject"/>.</remark>
+        public void ClearKitchenObject() {
+            _kitchenObject = null;
+
+            // Notify Clients
+            if (_kitchenObject is not null) {
+                TriggerOnAnyObjectDropClientRpc();
+            }
+        }
+
+        /// <inheritdoc cref="IKitchenObjectParent.HasKitchenObject"/>
+        /// <remark>Implementation of <see cref="IKitchenObjectParent.HasKitchenObject"/>.</remark>
+        public bool HasKitchenObject() {
+            return _kitchenObject is not null;
+        }
+
+        /// <inheritdoc cref="IKitchenObjectParent.GetNetworkObject"/>
+        /// <remark>Implementation of <see cref="IKitchenObjectParent.GetNetworkObject"/>.</remark>
+        public NetworkObjectReference GetNetworkObject() {
+            return NetworkObject;
         }
 
 
@@ -229,24 +252,6 @@ namespace Game.Player {
             if (OwnerClientId == clientId) {
                 GetKitchenObject()?.DestroySelf();
             }
-        }
-
-
-        // --- CLIENT LOGIC ---
-
-        [ClientRpc]
-        private void TriggerOnSelectedCounterChangedClientRpc(
-            [SuppressMessage("ReSharper", "UnusedParameter.Local")]
-            ClientRpcParams rpcParams = default
-        ) {
-            if (!_selectedCounterRef.Value.TryGet(out var counterNetworkObject)) {
-                counterNetworkObject = null;
-            }
-            var counter = counterNetworkObject?.GetComponent<BaseCounter>();
-            OnSelectedCounterChanged?.Invoke(
-                this,
-                new OnSelectedCounterChangedArgs { SelectedCounter = counter }
-            );
         }
 
 
@@ -365,7 +370,7 @@ namespace Game.Player {
         [ServerRpc]
         private void InteractPerformedServerRpc() {
             if (!_gameManager.IsPlaying()) return;
-            
+
             _selectedCounter?.Interact(this);
         }
 
@@ -375,8 +380,52 @@ namespace Game.Player {
         [ServerRpc]
         private void AlternateInteractPerformedServerRpc() {
             if (!_gameManager.IsPlaying()) return;
-            
+
             _selectedCounter?.InteractAlternate();
+        }
+
+
+        // --- CLIENT LOGIC ---
+
+        /// <summary>
+        /// Triggers <see cref="OnSelectedCounterChanged"/> for the owner client.
+        /// </summary>
+        /// <param name="rpcParams">Client RPC params.</param>
+        [ClientRpc]
+        private void TriggerOnSelectedCounterChangedClientRpc(
+            [SuppressMessage("ReSharper", "UnusedParameter.Local")]
+            ClientRpcParams rpcParams = default
+        ) {
+            if (!_selectedCounterRef.Value.TryGet(out var counterNetworkObject)) {
+                counterNetworkObject = null;
+            }
+            var counter = counterNetworkObject?.GetComponent<BaseCounter>();
+            OnSelectedCounterChanged?.Invoke(
+                this,
+                new OnSelectedCounterChangedArgs { SelectedCounter = counter }
+            );
+        }
+
+        /// <summary>
+        /// Triggers <see cref="OnAnyObjectPickup"/> for the owner client.
+        /// </summary>
+        [ClientRpc]
+        private void TriggerOnAnyObjectPickupClientRpc() {
+            OnAnyObjectPickup?.Invoke(
+                this,
+                new OnAnyObjectPickupArgs { Position = transform.position }
+            );
+        }
+
+        /// <summary>
+        /// Triggers <see cref="OnAnyObjectDrop"/> for the owner client.
+        /// </summary>
+        [ClientRpc]
+        private void TriggerOnAnyObjectDropClientRpc() {
+            OnAnyObjectDrop?.Invoke(
+                this,
+                new OnAnyObjectDropArgs { Position = transform.position }
+            );
         }
     }
 }

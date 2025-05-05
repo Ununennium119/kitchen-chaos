@@ -10,6 +10,8 @@ namespace Game.Counter.Logic {
         [SerializeField, Tooltip("Scriptable object of the plate")]
         private KitchenObjectSO plateKitchenObjectSO;
 
+        
+        // --- SERVER LOGIC ---
 
         /// <summary>
         /// Handles the player's interaction with the plate counter.
