@@ -9,16 +9,16 @@ namespace MainMenu.Logic {
     /// </summary>
     public class MainMenuCleanUpManager : MonoBehaviour {
         private void Awake() {
-            var isHost = NetworkManager.Singleton?.IsHost == true;
-            if (!isHost) return;
-
             if (MultiplayerManager.Instance != null) {
+                Debug.Log("Destroying multiplayer manager...");
                 Destroy(MultiplayerManager.Instance.gameObject);
             }
             if (LobbyManager.Instance != null) {
+                Debug.Log("Destroying lobby manager...");
                 Destroy(LobbyManager.Instance.gameObject);
             }
             if (NetworkManager.Singleton != null) {
+                Debug.Log("Destroying network manager...");
                 Destroy(NetworkManager.Singleton.gameObject);
             }
         }

@@ -211,7 +211,6 @@ namespace LobbyMenu.Logic {
                 }
 
                 MultiplayerManager.Instance.StartClient();
-                SceneLoader.LoadNetwork(SceneLoader.Scene.CharacterSelectScene);
             } catch (Exception e) {
                 Debug.LogError(e);
                 OnJoinLobbyFailed?.Invoke(this, EventArgs.Empty);
