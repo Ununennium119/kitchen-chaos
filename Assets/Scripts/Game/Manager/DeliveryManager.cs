@@ -45,11 +45,52 @@ namespace Game.Manager {
         private int maxOrdersCount = 4;
 
 
+        /// <remarks>
+        /// This field is only set in the server.
+        /// </remarks>
         private GameManager _gameManager;
-        private readonly List<OrderRecipeSO> _waitingOrderRecipeSOList = new();
-        private int _deliveredOrdersCount;
+
+        /// <remarks>
+        /// This field is only set in the server.
+        /// </remarks>
         private bool _isDeliveryActive;
 
+        private readonly List<OrderRecipeSO> _waitingOrderRecipeSOList = new();
+        private int _deliveredOrdersCount;
+
+
+        private void Awake() {
+            Logger.LogInitializingInstance(this);
+            if (Instance != null) {
+                Logger.LogMultipleInstancesError(this);
+                Destroy(gameObject);
+                return;
+            }
+            Instance = this;
+            Logger.LogInstanceInitialized(this);
+        }
+
+        private void Start() {
+            if (IsServer) {
+                _gameManager = GameManager.Instance;
+
+                _gameManager.OnStateChanged += OnGameStateChangedAction;
+            }
+        }
+
+        public override void OnNetworkSpawn() {
+            if (IsServer) {
+                StartCoroutine(OrderSpawnCoroutine());
+            }
+        }
+
+        /// <returns>List of scriptable objects of the waiting order recipes.</returns>
+        public List<OrderRecipeSO> GetWaitingOrderRecipeSOList() {
+            return _waitingOrderRecipeSOList;
+        }
+
+
+        // --- SERVER LOGIC ---
 
         /// <summary>
         /// Tries to match the plate with an order and deliver it.
@@ -93,38 +134,9 @@ namespace Game.Manager {
             return true;
         }
 
-        /// <returns>List of scriptable objects of the waiting order recipes.</returns>
-        public List<OrderRecipeSO> GetWaitingOrderRecipeSOList() {
-            return _waitingOrderRecipeSOList;
-        }
-
         /// <returns>Number of delivered orders</returns>
         public int GetDeliveredOrdersCount() {
             return _deliveredOrdersCount;
-        }
-
-
-        private void Awake() {
-            Logger.LogInitializingInstance(this);
-            if (Instance != null) {
-                Logger.LogMultipleInstancesError(this);
-                Destroy(gameObject);
-                return;
-            }
-            Instance = this;
-            Logger.LogInstanceInitialized(this);
-        }
-
-        private void Start() {
-            _gameManager = GameManager.Instance;
-
-            _gameManager.OnStateChanged += OnGameStateChangedAction;
-        }
-
-        public override void OnNetworkSpawn() {
-            if (IsServer) {
-                StartCoroutine(OrderSpawnCoroutine());
-            }
         }
 
 
@@ -156,6 +168,8 @@ namespace Game.Manager {
         }
 
 
+        // --- CLIENT LOGIC ---
+
         /// <summary>
         /// Client RPC that notifies handles a successful delivery for the client.
         /// </summary>
@@ -175,7 +189,6 @@ namespace Game.Manager {
         private void FailedDeliveryClientRpc() {
             OnDeliveryFail?.Invoke(this, EventArgs.Empty);
         }
-
 
         /// <summary>
         /// Client RPC that spawns a new order for the client.
