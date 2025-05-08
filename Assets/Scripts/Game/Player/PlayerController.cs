@@ -82,10 +82,6 @@ namespace Game.Player {
         [SerializeField, Tooltip("The player visual")]
         private PlayerVisual playerVisual;
 
-
-        /// <remarks>
-        /// This field is only set in the server.
-        /// </remarks>
         private GameManager _gameManager;
 
         /// <remarks>
@@ -116,9 +112,7 @@ namespace Game.Player {
 
 
         private void Start() {
-            if (IsServer) {
-                _gameManager = GameManager.Instance;
-            }
+            _gameManager = GameManager.Instance;
 
             if (IsOwner) {
                 _inputManager = InputManager.Instance;
@@ -133,6 +127,8 @@ namespace Game.Player {
 
         private void Update() {
             if (IsOwner) {
+                if (_gameManager.IsLocalGamePaused()) return;
+
                 var movementVector = _inputManager.GetPlayerMovementVectorNormalized();
                 SendMovementVectorServerRpc(movementVector);
 
@@ -226,6 +222,7 @@ namespace Game.Player {
         /// </remarks>
         private void OnInteractPerformedAction(object sender, EventArgs e) {
             if (!_gameManager.IsPlaying()) return;
+            if (_gameManager.IsLocalGamePaused()) return;
 
             InteractPerformedServerRpc();
         }
@@ -238,6 +235,7 @@ namespace Game.Player {
         /// </remarks>
         private void OnInteractAlternatePerformedAction(object sender, EventArgs e) {
             if (!_gameManager.IsPlaying()) return;
+            if (_gameManager.IsLocalGamePaused()) return;
 
             AlternateInteractPerformedServerRpc();
         }

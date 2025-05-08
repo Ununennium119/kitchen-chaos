@@ -38,14 +38,6 @@ namespace Game.Manager {
         }
 
         /// <summary>
-        /// This event is triggered whenever the overall game pause state changes.
-        /// </summary>
-        public event EventHandler<OnPauseToggledArgs> OnPauseToggled;
-        public class OnPauseToggledArgs : EventArgs {
-            public bool IsGamePaused;
-        }
-
-        /// <summary>
         /// This event is triggered whenever the local player's ready state changes.
         /// </summary>
         public event EventHandler<OnLocalPlayerReadyChangedArgs> OnLocalPlayerReadyChanged;
@@ -62,43 +54,15 @@ namespace Game.Manager {
         [SerializeField, Tooltip("Duration of game in \"Playing\" state")]
         private float playDuration = 60f;
 
-
         private InputManager _inputManager;
-        private readonly Dictionary<ulong, bool> _gamePausedDictionary = new();
+
         private readonly Dictionary<ulong, bool> _playerReadyDictionary = new();
-        private readonly NetworkVariable<bool> _isGamePaused = new();
         private readonly NetworkVariable<State> _state = new();
         private readonly NetworkVariable<float> _currentCountdownTime = new();
         private readonly NetworkVariable<float> _currentPlayTime = new();
-        private bool _isLocalGamePaused = false;
+
         private bool _isLocalPlayerReady;
-
-
-        /// <returns>Current countdown time</returns>
-        public float GetCountdownTime() {
-            return _currentCountdownTime.Value;
-        }
-
-        /// <returns>true if game is in <see cref="State.Playing"/> state.</returns>
-        public bool IsPlaying() {
-            return _state.Value == State.Playing;
-        }
-
-        /// <returns>Normalized (between 0 and 1) game time.</returns>
-        public float GetRemainingGameTimeNormalized() {
-            return _currentPlayTime.Value / playDuration;
-        }
-
-        /// <summary>
-        /// Toggles game pause if game is not in <see cref="State.GameOver"/> status.
-        /// </summary>
-        public void ToggleGamePause() {
-            if (_state.Value == State.GameOver) return;
-
-            _isLocalGamePaused = !_isLocalGamePaused;
-            SetGamePausedServerRpc(_isLocalGamePaused);
-            OnLocalPauseToggled?.Invoke(this, new OnLocalPauseToggledArgs { IsGamePaused = _isLocalGamePaused });
-        }
+        private bool _isLocalGamePaused = false;
 
 
         private void Awake() {
@@ -117,18 +81,16 @@ namespace Game.Manager {
         private void Start() {
             _inputManager = InputManager.Instance;
 
-            _inputManager.OnPausePerformed += OnPausePerformedPerformedAction;
-            _inputManager.OnInteractPerformed += OnInteractPerformedPerformedAction;
+            _inputManager.OnPausePerformed += OnPausePerformedAction;
+            _inputManager.OnInteractPerformed += OnInteractPerformedAction;
         }
 
         public override void OnNetworkSpawn() {
             _state.OnValueChanged += OnStateValueChangedAction;
-            _isGamePaused.OnValueChanged += OnIsGamePausedChangedAction;
 
             if (IsServer) {
                 _currentCountdownTime.Value = countdownDuration;
                 _currentPlayTime.Value = playDuration;
-                NetworkManager.Singleton.OnClientDisconnectCallback += OnClientDisconnectCallbackAction;
                 NetworkManager.Singleton.SceneManager.OnLoadEventCompleted += OnLoadEventCompletedAction;
             }
         }
@@ -162,17 +124,53 @@ namespace Game.Manager {
         }
 
 
+        /// <returns>Current countdown time</returns>
+        public float GetCountdownTime() {
+            return _currentCountdownTime.Value;
+        }
+
+        /// <returns>true if game is in <see cref="State.Playing"/> state.</returns>
+        public bool IsPlaying() {
+            return _state.Value == State.Playing;
+        }
+
+        /// <returns>Normalized (between 0 and 1) game time.</returns>
+        public float GetRemainingGameTimeNormalized() {
+            return _currentPlayTime.Value / playDuration;
+        }
+
+        /// <summary>
+        /// Toggles game pause if game is not in <see cref="State.GameOver"/> status.
+        /// </summary>
+        public void ToggleGamePause() {
+            if (_state.Value == State.GameOver) return;
+
+            _isLocalGamePaused = !_isLocalGamePaused;
+            OnLocalPauseToggled?.Invoke(this, new OnLocalPauseToggledArgs { IsGamePaused = _isLocalGamePaused });
+        }
+
+        /// <summary>
+        /// Determines whether the local game is currently paused.
+        /// </summary>
+        /// <returns>
+        /// <c>true</c> if the local game is paused; otherwise, <c>false</c>.
+        /// </returns>
+        public bool IsLocalGamePaused() {
+            return _isLocalGamePaused;
+        }
+
+
         /// <remarks>
         /// Invoked when the <see cref="InputManager.OnPausePerformed"/> event is triggered.
         /// </remarks>
-        private void OnPausePerformedPerformedAction(object sender, EventArgs e) {
+        private void OnPausePerformedAction(object sender, EventArgs e) {
             ToggleGamePause();
         }
 
         /// <remarks>
         /// Invoked when the <see cref="InputManager.OnInteractPerformed"/> event is triggered.
         /// </remarks>
-        private void OnInteractPerformedPerformedAction(object sender, EventArgs e) {
+        private void OnInteractPerformedAction(object sender, EventArgs e) {
             if (_state.Value == State.WaitingToStart && !_isLocalGamePaused) {
                 _isLocalPlayerReady = true;
                 OnLocalPlayerReadyChanged?.Invoke(
@@ -191,25 +189,6 @@ namespace Game.Manager {
         }
 
         /// <remarks>
-        /// Invoked when the <see cref="_isGamePaused"/> event is triggered.
-        /// </remarks>
-        private void OnIsGamePausedChangedAction(bool previousValue, bool newValue) {
-            if (newValue) {
-                Time.timeScale = 0f;
-            } else {
-                Time.timeScale = 1f;
-            }
-            OnPauseToggled?.Invoke(this, new OnPauseToggledArgs { IsGamePaused = newValue });
-        }
-
-        /// <remarks>
-        /// Invoked when the <see cref="NetworkManager.OnClientDisconnectCallback"/> event is triggered.
-        /// </remarks>
-        private void OnClientDisconnectCallbackAction(ulong clientId) {
-            CheckGamePaused();
-        }
-
-        /// <remarks>
         /// Invoked when the <see cref="NetworkSceneManager.OnLoadEventCompleted"/> event is triggered.
         /// </remarks>
         private void OnLoadEventCompletedAction(
@@ -224,6 +203,9 @@ namespace Game.Manager {
             }
         }
 
+
+        // --- SERVER LOGIC ---
+
         /// <summary>
         /// Server RPC that marks a player as ready.
         /// </summary>
@@ -237,26 +219,6 @@ namespace Game.Manager {
             if (playerReadyList.All(isPlayerReady => isPlayerReady)) {
                 _state.Value = State.Countdown;
             }
-        }
-
-        /// <summary>
-        /// Server RPC that updates a client's pause state.
-        /// </summary>
-        [ServerRpc(RequireOwnership = false)]
-        private void SetGamePausedServerRpc(bool isPaused, ServerRpcParams serverRpcParams = default) {
-            _gamePausedDictionary[serverRpcParams.Receive.SenderClientId] = isPaused;
-            CheckGamePaused();
-        }
-
-
-        /// <summary>
-        /// Aggregates pause states of all clients to determine the global game pause state.
-        /// </summary>
-        private void CheckGamePaused() {
-            var gamePausedList = NetworkManager.Singleton.ConnectedClientsIds.Select(
-                playerId => _gamePausedDictionary.TryGetValue(playerId, out var isGamePaused) && isGamePaused
-            );
-            _isGamePaused.Value = gamePausedList.Any(isGamePaused => isGamePaused);
         }
     }
 }
