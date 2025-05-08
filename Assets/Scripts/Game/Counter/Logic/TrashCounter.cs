@@ -21,17 +21,24 @@ namespace Game.Counter.Logic {
             OnTrash = null;
         }
 
+        
+        // --- SERVER LOGIC ---
 
         /// <summary>
         /// Handles the player's interaction with the trash counter.
         /// If the player has a kitchen object, it will be destroyed.
         /// </summary>
         /// <param name="playerController">The player interacting with the trash counter.</param>
+        /// <remarks>
+        /// Should only be called from server.
+        /// </remarks>
         public override void Interact(PlayerController playerController) {
             if (!playerController.HasKitchenObject()) return;
 
             playerController.GetKitchenObject().DestroySelf();
-            TriggerOnTrashServerRpc();
+
+            // Update clients
+            TriggerOnTrashClientRpc();
         }
 
         /// <summary>
@@ -41,14 +48,8 @@ namespace Game.Counter.Logic {
             // Do Nothing
         }
 
-
-        /// <summary>
-        /// Server RPC that triggers the <see cref="OnTrash" /> event for all clients.
-        /// </summary>
-        [ServerRpc(RequireOwnership = false)]
-        private void TriggerOnTrashServerRpc() {
-            TriggerOnTrashClientRpc();
-        }
+        
+        // --- CLIENT LOGIC ---
 
         /// <summary>
         /// Client RPC that triggers the <see cref="OnTrash" /> event for the client.

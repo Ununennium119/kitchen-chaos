@@ -10,12 +10,17 @@ namespace Game.Counter.Logic {
         [SerializeField, Tooltip("Scriptable object of the plate")]
         private KitchenObjectSO plateKitchenObjectSO;
 
+        
+        // --- SERVER LOGIC ---
 
         /// <summary>
         /// Handles the player's interaction with the plate counter.
         /// If the player doesn't have a kitchen object, a plate is spawned for them.
         /// </summary>
         /// <param name="playerController">The player interacting with the counter.</param>
+        /// <remarks>
+        /// Should only be called from server.
+        /// </remarks>
         public override void Interact(PlayerController playerController) {
             if (!playerController.HasKitchenObject()) {
                 KitchenObject.KitchenObject.SpawnKitchenObject(

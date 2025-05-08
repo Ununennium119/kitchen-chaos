@@ -1,4 +1,5 @@
 using Game.KitchenObject;
+using UnityEngine;
 
 namespace Game.Counter.Logic {
     /// <summary>
@@ -11,6 +12,9 @@ namespace Game.Counter.Logic {
         /// it swaps or moves objects accordingly.
         /// </summary>
         /// <param name="playerController">The player interacting with the counter.</param>
+        /// <remarks>
+        /// Should only be called in the server.
+        /// </remarks>
         public override void Interact(Player.PlayerController playerController) {
             var playerKitchenObject = playerController.GetKitchenObject();
             var counterKitchenObject = GetKitchenObject();

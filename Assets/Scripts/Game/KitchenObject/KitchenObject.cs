@@ -13,20 +13,10 @@ namespace Game.KitchenObject {
         private KitchenObjectSO kitchenObjectSO;
 
 
+        /// <remarks>
+        /// This field is only updated in the server.
+        /// </remarks>
         private IKitchenObjectParent _parent;
-
-
-        /// <summary>
-        /// Spawns and adds a kitchen object to the parent.
-        /// </summary>
-        /// <param name="kitchenObjectSO">Scriptable object of the kitchen object</param>
-        /// <param name="parent">The parent to add kitchen object to</param>
-        public static void SpawnKitchenObject(
-            KitchenObjectSO kitchenObjectSO,
-            IKitchenObjectParent parent
-        ) {
-            MultiplayerManager.Instance.SpawnKitchenObject(kitchenObjectSO, parent);
-        }
 
 
         /// <summary>
@@ -49,91 +39,87 @@ namespace Game.KitchenObject {
             return kitchenObjectSO;
         }
 
+
+        // SERVER LOGIC
+
+        /// <summary>
+        /// Spawns and adds a kitchen object to the parent.
+        /// </summary>
+        /// <param name="kitchenObjectSO">Scriptable object of the kitchen object</param>
+        /// <param name="parent">The parent to add kitchen object to</param>
+        /// <remarks>
+        /// Should only be called from server.
+        /// </remarks>
+        public static void SpawnKitchenObject(
+            KitchenObjectSO kitchenObjectSO,
+            IKitchenObjectParent parent
+        ) {
+            var kitchenObjectTransform = Instantiate(kitchenObjectSO.prefab);
+            var kitchenObjectNetworkObject = kitchenObjectTransform.GetComponent<NetworkObject>();
+            kitchenObjectNetworkObject.Spawn();
+
+            kitchenObjectTransform.GetComponent<KitchenObject>().SetParent(parent);
+        }
+
         /// <summary>
         /// Sets the parent of this kitchen object.
         /// </summary>
         /// <param name="newParent">The new parent</param>
+        /// <remarks>
+        /// Should only be called from server.
+        /// </remarks>
         public void SetParent(IKitchenObjectParent newParent) {
-            SetParentServerRpc(newParent.GetNetworkObject());
+            if (newParent.HasKitchenObject()) {
+                Debug.LogError(
+                    $"Tying to set a kitchen object for {newParent.GetType().Name} which already has a one."
+                );
+                return;
+            }
+
+            newParent.SetKitchenObject(this);
+            _parent = newParent;
+
+            // Update clients
+            FollowParentClientRpc(newParent.GetNetworkObject());
         }
 
         /// <summary>
         /// Clears parent of this kitchen object.
         /// </summary>
+        /// <remarks>
+        /// Should only be called from server.
+        /// </remarks>
         public void ClearParent() {
-            ClearParentServerRpc();
-        }
-
-        /// <summary>
-        /// Removes this kitchen object from its parent and destroys itself.
-        /// </summary>
-        public void DestroySelf() {
-            ClearParentKitchenObjectServerRpc();
-            MultiplayerManager.Instance.DestroyKitchenObject(this);
-        }
-
-
-        /// <summary>
-        /// Server RPC that sets parent of the game object for all client.
-        /// </summary>
-        /// <param name="newParentNetworkObjectReference">Network object reference of the new parent</param>
-        [ServerRpc(RequireOwnership = false)]
-        private void SetParentServerRpc(NetworkObjectReference newParentNetworkObjectReference) {
-            newParentNetworkObjectReference.TryGet(out var newParentNetworkObject);
-            var newParent = newParentNetworkObject.GetComponent<IKitchenObjectParent>();
-            if (newParent.HasKitchenObject()) return;
-            SetParentClientRpc(newParentNetworkObjectReference);
-        }
-
-        /// <summary>
-        /// Client RPC that sets parent of the game object for the client.
-        /// </summary>
-        /// <param name="newParentNetworkObjectReference">Network object reference of the new parent</param>
-        [ClientRpc]
-        private void SetParentClientRpc(NetworkObjectReference newParentNetworkObjectReference) {
-            newParentNetworkObjectReference.TryGet(out var newParentNetworkObject);
-            var newParent = newParentNetworkObject.GetComponent<IKitchenObjectParent>();
-            if (newParent.HasKitchenObject()) {
-                Debug.LogError("Trying to set kitchen object for a parent which already has one!");
-            }
-            newParent.SetKitchenObject(this);
-            var followTransform = GetComponent<FollowTransform>();
-            followTransform.SetTargetTransform(newParent.GetKitchenObjectFollowTransform());
-            transform.localPosition = Vector3.zero;
-            _parent = newParent;
-        }
-
-        /// <summary>
-        /// Server RPC that clears parent of the game object for all clients.
-        /// </summary>
-        [ServerRpc(RequireOwnership = false)]
-        private void ClearParentServerRpc() {
-            ClearParentClientRpc();
-        }
-
-        /// <summary>
-        /// Client RPC that clears parent of the game object for the client.
-        /// </summary>
-        [ClientRpc]
-        private void ClearParentClientRpc() {
             _parent?.ClearKitchenObject();
             _parent = null;
         }
 
         /// <summary>
-        /// Server RPC that clears kitchen object of the parent for all clients.
+        /// Removes this kitchen object from its parent and destroys itself.
         /// </summary>
-        [ServerRpc(RequireOwnership = false)]
-        private void ClearParentKitchenObjectServerRpc() {
-            ClearParentKitchenObjectClientRpc();
+        /// <remarks>
+        /// Should only be called from server.
+        /// </remarks>
+        public void DestroySelf() {
+            _parent?.ClearKitchenObject();
+            NetworkObject.Despawn();
         }
 
+
+        // CLIENT LOGIC
+
         /// <summary>
-        /// Client RPC that clears kitchen object of the parent for this client.
+        /// Client RPC that makes the kitchen object to follow the parent for the clients.
         /// </summary>
+        /// <param name="newParentNetworkObjectReference">Network object reference of the new parent</param>
         [ClientRpc]
-        private void ClearParentKitchenObjectClientRpc() {
-            _parent?.ClearKitchenObject();
+        private void FollowParentClientRpc(NetworkObjectReference newParentNetworkObjectReference) {
+            newParentNetworkObjectReference.TryGet(out var newParentNetworkObject);
+            var newParent = newParentNetworkObject.GetComponent<IKitchenObjectParent>();
+
+            var followTransform = GetComponent<FollowTransform>();
+            followTransform.SetTargetTransform(newParent.GetKitchenObjectFollowTransform());
+            transform.localPosition = Vector3.zero;
         }
     }
 }

@@ -40,17 +40,63 @@ namespace Game.Counter.Logic {
         private FryingRecipeListSO fryingRecipeListSO;
 
 
-        private FryingRecipeSO _currentFryingRecipeSO;
         private State _currentState;
+        private FryingRecipeSO _currentFryingRecipeSO;
         private readonly NetworkVariable<float> _fryingTime = new();
         private readonly NetworkVariable<float> _burningTime = new();
 
+
+        // --- SERVER LOGIC ---
+
+        private void Update() {
+            if (!IsServer) return;
+
+            if (_currentFryingRecipeSO is null) return;
+
+            switch (_currentState) {
+                case State.Idle:
+                    // Do Nothing
+                    break;
+                case State.Frying:
+                    _fryingTime.Value += Time.deltaTime;
+                    if (_fryingTime.Value >= _currentFryingRecipeSO.fryingTime) {
+                        // Transition to Fried state once frying is complete
+                        ChangeState(State.Fried);
+                        GetKitchenObject().DestroySelf();
+                        KitchenObject.KitchenObject.SpawnKitchenObject(
+                            _currentFryingRecipeSO.friedKitchenObjectSO,
+                            this
+                        );
+                    }
+                    break;
+                case State.Fried:
+                    _burningTime.Value += Time.deltaTime;
+                    if (_burningTime.Value >= _currentFryingRecipeSO.burningTime) {
+                        // Transition to Burned state once burning is complete
+                        ChangeState(State.Burned);
+                        GetKitchenObject().DestroySelf();
+                        KitchenObject.KitchenObject.SpawnKitchenObject(
+                            _currentFryingRecipeSO.burnedKitchenObjectSO,
+                            this
+                        );
+                    }
+                    break;
+                case State.Burned:
+                    // Do Nothing
+                    break;
+                default:
+                    throw new ArgumentOutOfRangeException();
+            }
+        }
 
         /// <summary>
         /// Handles the player's interaction with the stove counter.
         /// If possible, swaps kitchen objects between player and counter.
         /// </summary>
         /// <param name="playerController">The player interacting with the stove.</param>
+        /// <remarks>
+        /// Should only be called from server.
+        /// </remarks>
         public override void Interact(PlayerController playerController) {
             var playerKitchenObject = playerController.GetKitchenObject();
             var counterKitchenObject = GetKitchenObject();
@@ -62,7 +108,7 @@ namespace Game.Counter.Logic {
                         return;
                     }
                     counterKitchenObject.DestroySelf();
-                    ChangeStateServerRpc(State.Idle);
+                    ChangeState(State.Idle);
                     return;
                 }
             }
@@ -80,10 +126,13 @@ namespace Game.Counter.Logic {
             counterKitchenObject?.SetParent(playerController);
 
             // Update stove's current recipe
-            UpdateRecipeSOServerRpc(GetRecipeIndex(recipeSO));
             _currentFryingRecipeSO = recipeSO;
+
+            // Update clients
+            UpdateRecipeSOClientRpc(GetRecipeIndex(recipeSO));
+
             if (recipeSO == null) {
-                ChangeStateServerRpc(State.Idle);
+                ChangeState(State.Idle);
                 return;
             }
 
@@ -91,10 +140,10 @@ namespace Game.Counter.Logic {
             var stoveKitchenObjectSO = playerKitchenObject?.GetKitchenObjectSO();
             if (stoveKitchenObjectSO == recipeSO.rawKitchenObjectSO) {
                 // Start frying
-                ChangeStateServerRpc(State.Frying);
+                ChangeState(State.Frying);
             } else if (stoveKitchenObjectSO == recipeSO.friedKitchenObjectSO) {
                 // Start burning
-                ChangeStateServerRpc(State.Fried);
+                ChangeState(State.Fried);
             }
         }
 
@@ -103,67 +152,6 @@ namespace Game.Counter.Logic {
         /// </summary>
         public override void InteractAlternate() {
             // Do Nothing
-        }
-
-
-        private void Update() {
-            if (!IsServer) return;
-
-            if (_currentFryingRecipeSO is null) return;
-
-            switch (_currentState) {
-                case State.Idle:
-                    // Do Nothing
-                    break;
-                case State.Frying:
-                    _fryingTime.Value += Time.deltaTime;
-                    if (_fryingTime.Value >= _currentFryingRecipeSO.fryingTime) {
-                        // Transition to Fried state once frying is complete
-                        ChangeStateServerRpc(State.Fried);
-                        GetKitchenObject().DestroySelf();
-                        KitchenObject.KitchenObject.SpawnKitchenObject(
-                            _currentFryingRecipeSO.friedKitchenObjectSO,
-                            this
-                        );
-                    }
-                    break;
-                case State.Fried:
-                    _burningTime.Value += Time.deltaTime;
-                    if (_burningTime.Value >= _currentFryingRecipeSO.burningTime) {
-                        // Transition to Burned state once burning is complete
-                        ChangeStateServerRpc(State.Burned);
-                        GetKitchenObject().DestroySelf();
-                        KitchenObject.KitchenObject.SpawnKitchenObject(
-                            _currentFryingRecipeSO.burnedKitchenObjectSO,
-                            this
-                        );
-                    }
-                    break;
-                case State.Burned:
-                    // Do Nothing
-                    break;
-                default:
-                    throw new ArgumentOutOfRangeException();
-            }
-        }
-
-        public override void OnNetworkSpawn() {
-            _fryingTime.OnValueChanged += TriggerOnProgressChanged;
-            _burningTime.OnValueChanged += TriggerOnProgressChanged;
-        }
-
-
-        private FryingRecipeSO GetRecipe(KitchenObjectSO kitchenObjectSO) {
-            if (kitchenObjectSO == null) return null;
-            return fryingRecipeListSO.fryingRecipeSOList.FirstOrDefault(
-                cuttingRecipe => cuttingRecipe.rawKitchenObjectSO == kitchenObjectSO ||
-                                 cuttingRecipe.friedKitchenObjectSO == kitchenObjectSO
-            );
-        }
-
-        private int GetRecipeIndex(FryingRecipeSO fryingRecipeSO) {
-            if (fryingRecipeSO == null) return -1;
-            return fryingRecipeListSO.fryingRecipeSOList.IndexOf(fryingRecipeSO);
         }
 
 
@@ -191,15 +179,25 @@ namespace Game.Counter.Logic {
             );
         }
 
-
         /// <summary>
-        /// Server RPC that changes the state of the stove.
+        /// Changes the state of the stove.
         /// </summary>
         /// <param name="newState">The new state to change to.</param>
-        [ServerRpc(RequireOwnership = false)]
-        private void ChangeStateServerRpc(State newState) {
+        private void ChangeState(State newState) {
             ResetFryingAndBurningTimes();
+
+            _currentState = newState;
+
+            // Update clients
             ChangeStateClientRpc(newState);
+        }
+
+
+        // --- CLIENT LOGIC ---
+
+        public override void OnNetworkSpawn() {
+            _fryingTime.OnValueChanged += TriggerOnProgressChanged;
+            _burningTime.OnValueChanged += TriggerOnProgressChanged;
         }
 
         /// <summary>
@@ -208,20 +206,14 @@ namespace Game.Counter.Logic {
         /// <param name="newState">The new state to change to.</param>
         [ClientRpc]
         private void ChangeStateClientRpc(State newState) {
-            _currentState = newState;
+            if (!IsServer) {
+                _currentState = newState;
+            }
+
             OnStateChanged?.Invoke(
                 this,
                 new OnStateChangedArgs { State = newState }
             );
-        }
-
-        /// <summary>
-        /// Server RPC that updates the frying recipe.
-        /// </summary>
-        /// <param name="index">The index of the frying recipe in the list.</param>
-        [ServerRpc(RequireOwnership = false)]
-        private void UpdateRecipeSOServerRpc(int index) {
-            UpdateRecipeSOClientRpc(index);
         }
 
         /// <summary>
@@ -230,11 +222,27 @@ namespace Game.Counter.Logic {
         /// <param name="index">The index of the frying recipe in the list.</param>
         [ClientRpc]
         private void UpdateRecipeSOClientRpc(int index) {
+            if (IsServer) return;
+
             try {
                 _currentFryingRecipeSO = fryingRecipeListSO.fryingRecipeSOList[index];
             } catch (ArgumentOutOfRangeException) {
                 _currentFryingRecipeSO = null;
             }
+        }
+
+
+        private FryingRecipeSO GetRecipe(KitchenObjectSO kitchenObjectSO) {
+            if (kitchenObjectSO == null) return null;
+            return fryingRecipeListSO.fryingRecipeSOList.FirstOrDefault(
+                cuttingRecipe => cuttingRecipe.rawKitchenObjectSO == kitchenObjectSO ||
+                                 cuttingRecipe.friedKitchenObjectSO == kitchenObjectSO
+            );
+        }
+
+        private int GetRecipeIndex(FryingRecipeSO fryingRecipeSO) {
+            if (fryingRecipeSO == null) return -1;
+            return fryingRecipeListSO.fryingRecipeSOList.IndexOf(fryingRecipeSO);
         }
     }
 }

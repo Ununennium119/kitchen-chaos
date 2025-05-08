@@ -45,22 +45,61 @@ namespace Game.Manager {
         private int maxOrdersCount = 4;
 
 
+        /// <remarks>
+        /// This field is only set in the server.
+        /// </remarks>
         private GameManager _gameManager;
+
+        /// <remarks>
+        /// This field is only set in the server.
+        /// </remarks>
+        private bool _isDeliveryActive;
+
         private readonly List<OrderRecipeSO> _waitingOrderRecipeSOList = new();
         private int _deliveredOrdersCount;
-        private bool _isDeliveryActive;
-        /// <summary>
-        /// List of delivered plate indices.
-        /// This list is used to prevent delivering the same plate multiple times.
-        /// </summary>
-        private readonly List<int> _deliveredPlateIndices = new();
 
+
+        private void Awake() {
+            Logger.LogInitializingInstance(this);
+            if (Instance != null) {
+                Logger.LogMultipleInstancesError(this);
+                Destroy(gameObject);
+                return;
+            }
+            Instance = this;
+            Logger.LogInstanceInitialized(this);
+        }
+
+        private void Start() {
+            if (IsServer) {
+                _gameManager = GameManager.Instance;
+
+                _gameManager.OnStateChanged += OnGameStateChangedAction;
+            }
+        }
+
+        public override void OnNetworkSpawn() {
+            if (IsServer) {
+                StartCoroutine(OrderSpawnCoroutine());
+            }
+        }
+
+        /// <returns>List of scriptable objects of the waiting order recipes.</returns>
+        public List<OrderRecipeSO> GetWaitingOrderRecipeSOList() {
+            return _waitingOrderRecipeSOList;
+        }
+
+
+        // --- SERVER LOGIC ---
 
         /// <summary>
         /// Tries to match the plate with an order and deliver it.
         /// </summary>
         /// <param name="plateKitchenObject">The plate kitchen object</param>
         /// <returns>true if plate is delivered successfully</returns>
+        /// <remarks>
+        /// Should only be called from server.
+        /// </remarks>
         public bool DeliverPlate(PlateKitchenObject plateKitchenObject) {
             OrderRecipeSO deliveredWaitingOrderRecipeSO = null;
             var deliveredWaitingOrderIndex = -1;
@@ -83,46 +122,21 @@ namespace Game.Manager {
                 break;
             }
             if (deliveredWaitingOrderRecipeSO == null) {
-                FailedDeliveryServerRpc();
+                // Update clients
+                FailedDeliveryClientRpc();
+
                 return false;
             }
 
-            SuccessfulDeliveryServerRpc(deliveredWaitingOrderIndex, plateKitchenObject.Index);
-            return true;
-        }
+            // Update clients
+            SuccessfullyDeliveryClientRpc(deliveredWaitingOrderIndex);
 
-        /// <returns>List of scriptable objects of the waiting order recipes.</returns>
-        public List<OrderRecipeSO> GetWaitingOrderRecipeSOList() {
-            return _waitingOrderRecipeSOList;
+            return true;
         }
 
         /// <returns>Number of delivered orders</returns>
         public int GetDeliveredOrdersCount() {
             return _deliveredOrdersCount;
-        }
-
-
-        private void Awake() {
-            Logger.LogInitializingInstance(this);
-            if (Instance != null) {
-                Logger.LogMultipleInstancesError(this);
-                Destroy(gameObject);
-                return;
-            }
-            Instance = this;
-            Logger.LogInstanceInitialized(this);
-        }
-
-        private void Start() {
-            _gameManager = GameManager.Instance;
-
-            _gameManager.OnStateChanged += OnGameStateChangedAction;
-        }
-
-        public override void OnNetworkSpawn() {
-            if (IsServer) {
-                StartCoroutine(OrderSpawnCoroutine());
-            }
         }
 
 
@@ -154,26 +168,7 @@ namespace Game.Manager {
         }
 
 
-        /// <summary>
-        /// Server RPC that handles delivery success on the server for all clients.
-        /// </summary>
-        /// <param name="orderIndex">Index of the successfully matched order.</param>
-        /// <param name="plateIndex">Index of the plate kitchen object</param>
-        [ServerRpc(RequireOwnership = false)]
-        private void SuccessfulDeliveryServerRpc(int orderIndex, int plateIndex) {
-            if (_deliveredPlateIndices.Contains(plateIndex)) return;
-
-            _deliveredPlateIndices.Add(plateIndex);
-            SuccessfullyDeliveryClientRpc(orderIndex);
-        }
-
-        /// <summary>
-        /// Server RPC that delivery failure on the server for all clients.
-        /// </summary>
-        [ServerRpc(RequireOwnership = false)]
-        private void FailedDeliveryServerRpc() {
-            FailedDeliveryClientRpc();
-        }
+        // --- CLIENT LOGIC ---
 
         /// <summary>
         /// Client RPC that notifies handles a successful delivery for the client.
@@ -181,10 +176,10 @@ namespace Game.Manager {
         /// <param name="orderIndex">Index of the successfully delivered order.</param>
         [ClientRpc]
         private void SuccessfullyDeliveryClientRpc(int orderIndex) {
+            _deliveredOrdersCount += 1;
             _waitingOrderRecipeSOList.RemoveAt(orderIndex);
             OnOrderDeSpawned?.Invoke(this, EventArgs.Empty);
             OnDeliverySuccess?.Invoke(this, EventArgs.Empty);
-            _deliveredOrdersCount += 1;
         }
 
         /// <summary>
@@ -194,7 +189,6 @@ namespace Game.Manager {
         private void FailedDeliveryClientRpc() {
             OnDeliveryFail?.Invoke(this, EventArgs.Empty);
         }
-
 
         /// <summary>
         /// Client RPC that spawns a new order for the client.

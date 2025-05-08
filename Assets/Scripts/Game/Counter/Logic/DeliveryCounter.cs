@@ -14,18 +14,29 @@ namespace Game.Counter.Logic {
         public event EventHandler OnDeliverySuccess;
 
 
+        /// <remarks>
+        /// This field is only set in the server.
+        /// </remarks>
         private DeliveryManager _deliveryManager;
 
+        
+        // --- SERVER LOGIC ---
 
         private void Start() {
-            _deliveryManager = DeliveryManager.Instance;
+            if (IsServer) {
+                _deliveryManager = DeliveryManager.Instance;
+            }
         }
+
 
         /// <summary>
         /// Handles the player's interaction with the delivery counter.
         /// If the player has a plate, it attempts to deliver the plate to the DeliveryManager.
         /// </summary>
         /// <param name="playerController">The player who is interacting with the counter.</param>
+        /// <remarks>
+        /// Should only be called from server.
+        /// </remarks>
         public override void Interact(PlayerController playerController) {
             var playerKitchenObject = playerController.GetKitchenObject();
             // Do nothing if player does not have plate
@@ -35,7 +46,9 @@ namespace Game.Counter.Logic {
 
             // Plate is delivered
             plateKitchenObject.DestroySelf();
-            DeliverySuccessServerRpc();
+
+            // Update clients
+            DeliverySuccessClientRpc();
         }
 
         /// <summary>
@@ -45,14 +58,8 @@ namespace Game.Counter.Logic {
             // Do Nothing
         }
 
-
-        /// <summary>
-        /// Server RPC that triggers <see cref="OnDeliverySuccess"/> event for all clients.
-        /// </summary>
-        [ServerRpc(RequireOwnership = false)]
-        private void DeliverySuccessServerRpc() {
-            DeliverySuccessClientRpc();
-        }
+        
+        // --- CLIENT LOGIC ---
 
         /// <summary>
         /// Client RPC that triggers <see cref="OnDeliverySuccess"/> event for the client.

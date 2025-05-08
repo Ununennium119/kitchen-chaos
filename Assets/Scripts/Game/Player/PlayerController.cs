@@ -1,4 +1,5 @@
 using System;
+using System.Diagnostics.CodeAnalysis;
 using Common.Logic;
 using Game.Counter.Logic;
 using Game.KitchenObject;
@@ -68,9 +69,9 @@ namespace Game.Player {
         [Header("Interaction")]
         [SerializeField, Tooltip("Maximum distance in which player can select and interact with things")]
         private float interactDistance = 2f;
-        [SerializeField, Tooltip("The layer of the containers")]
+        [SerializeField, Tooltip("The layer mask of the containers")]
         private LayerMask counterLayerMask;
-        [SerializeField, Tooltip("The layer of the object which player should collide with")]
+        [SerializeField, Tooltip("The layer mask of the object which player should collide with")]
         private LayerMask collisionsLayerMask;
 
         [Header("Other")]
@@ -81,16 +82,86 @@ namespace Game.Player {
         [SerializeField, Tooltip("The player visual")]
         private PlayerVisual playerVisual;
 
-
         private GameManager _gameManager;
+
+        /// <remarks>
+        /// This field is only set in the owner.
+        /// </remarks>
         private InputManager _inputManager;
-        private MultiplayerManager _multiplayerManager;
+
+        /// <remarks>
+        /// This field is only updated in the owner.
+        /// </remarks>
         private bool _isWalking;
-        private BaseCounter _selectedCounter;
+
+        /// <remarks>
+        /// This field is only updated in the server.
+        /// </remarks>
         private KitchenObject.KitchenObject _kitchenObject;
+
+        private MultiplayerManager _multiplayerManager;
+
+        /// <summary>
+        /// The selected counter.
+        /// </summary>
+        /// <remarks>
+        /// This field is only set in the server.
+        /// </remarks>
+        private BaseCounter _selectedCounter;
+        private readonly NetworkVariable<NetworkObjectReference> _selectedCounterRef = new();
+
+
+        private void Start() {
+            _gameManager = GameManager.Instance;
+
+            if (IsOwner) {
+                _inputManager = InputManager.Instance;
+                _inputManager.OnInteractPerformed += OnInteractPerformedAction;
+                _inputManager.OnInteractAlternatePerformed += OnInteractAlternatePerformedAction;
+            }
+
+            var playerData = _multiplayerManager.GetPlayerData(OwnerClientId);
+            var color = _multiplayerManager.GetPlayerColor(playerData.ColorIndex);
+            playerVisual.SetColor(color);
+        }
+
+        private void Update() {
+            if (IsOwner) {
+                if (_gameManager.IsLocalGamePaused()) return;
+
+                var movementVector = _inputManager.GetPlayerMovementVectorNormalized();
+                SendMovementVectorServerRpc(movementVector);
+
+                // Update walking
+                _isWalking = movementVector != Vector2.zero;
+            }
+        }
+
+        public override void OnNetworkSpawn() {
+            _multiplayerManager = MultiplayerManager.Instance;
+            if (IsServer) {
+                var playerDataIndex = _multiplayerManager.GetPlayerDataIndex(OwnerClientId);
+                transform.position = spawnPositions[playerDataIndex];
+                NetworkManager.Singleton.OnClientDisconnectCallback += OnClientDisconnectCallbackAction;
+            }
+
+            if (IsOwner) {
+                Logger.LogInitializingInstance(this);
+                if (LocalInstance != null) {
+                    Logger.LogMultipleInstancesError(this);
+                    Destroy(gameObject);
+                    return;
+                }
+                LocalInstance = this;
+                Logger.LogInstanceInitialized(this);
+
+                OnLocalPlayerNetworkSpawned?.Invoke(this, EventArgs.Empty);
+            }
+        }
 
 
         /// <returns>true if player is walking</returns>
+        /// <remarks>Only valid for the owner because <see cref="_isWalking"/> is only updated in the owner</remarks>
         public bool IsWalking() {
             return _isWalking;
         }
@@ -111,19 +182,23 @@ namespace Game.Player {
         /// <inheritdoc cref="IKitchenObjectParent.SetKitchenObject"/>
         /// <remark>Implementation of <see cref="IKitchenObjectParent.SetKitchenObject"/>.</remark>
         public void SetKitchenObject(KitchenObject.KitchenObject kitchenObject) {
-            if (kitchenObject is not null) {
-                OnAnyObjectPickup?.Invoke(this, new OnAnyObjectPickupArgs { Position = transform.position });
-            }
             _kitchenObject = kitchenObject;
+
+            // Notify Clients
+            if (kitchenObject is not null) {
+                TriggerOnAnyObjectPickupClientRpc();
+            }
         }
 
         /// <inheritdoc cref="IKitchenObjectParent.ClearKitchenObject"/>
         /// <remark>Implementation of <see cref="IKitchenObjectParent.ClearKitchenObject"/>.</remark>
         public void ClearKitchenObject() {
-            if (_kitchenObject is not null) {
-                OnAnyObjectDrop?.Invoke(this, new OnAnyObjectDropArgs { Position = transform.position });
-            }
             _kitchenObject = null;
+
+            // Notify Clients
+            if (_kitchenObject is not null) {
+                TriggerOnAnyObjectDropClientRpc();
+            }
         }
 
         /// <inheritdoc cref="IKitchenObjectParent.HasKitchenObject"/>
@@ -139,50 +214,55 @@ namespace Game.Player {
         }
 
 
-        private void Start() {
-            _gameManager = GameManager.Instance;
-            _inputManager = InputManager.Instance;
+        /// <summary>
+        /// Handles interaction input event.
+        /// </summary>
+        /// <remarks>
+        /// Invoked when the <see cref="InputManager.OnInteractPerformed"/> event is triggered.
+        /// </remarks>
+        private void OnInteractPerformedAction(object sender, EventArgs e) {
+            if (!_gameManager.IsPlaying()) return;
+            if (_gameManager.IsLocalGamePaused()) return;
 
-            _inputManager.OnInteractPerformed += OnInteractPerformedAction;
-            _inputManager.OnInteractAlternatePerformed += OnInteractAlternatePerformedAction;
-
-            var playerData = _multiplayerManager.GetPlayerData(OwnerClientId);
-            var color = _multiplayerManager.GetPlayerColor(playerData.ColorIndex);
-            playerVisual.SetColor(color);
+            InteractPerformedServerRpc();
         }
 
-        private void Update() {
-            if (!IsOwner) return;
+        /// <summary>
+        /// Handles alternate interaction input event.
+        /// </summary>
+        /// <remarks>
+        /// Invoked when the <see cref="InputManager.OnInteractAlternatePerformed"/> event is triggered.
+        /// </remarks>
+        private void OnInteractAlternatePerformedAction(object sender, EventArgs e) {
+            if (!_gameManager.IsPlaying()) return;
+            if (_gameManager.IsLocalGamePaused()) return;
 
-            // Calculate movement direction and update walking
-            var movementVector = _inputManager.GetPlayerMovementVectorNormalized();
+            AlternateInteractPerformedServerRpc();
+        }
+
+        /// <summary>
+        /// Destroys any held kitchen object.
+        /// </summary>
+        /// <remarks>
+        /// Invoked when the <see cref="NetworkManager.OnClientDisconnectCallback"/> event is triggered.
+        /// </remarks>
+        private void OnClientDisconnectCallbackAction(ulong clientId) {
+            if (OwnerClientId == clientId) {
+                GetKitchenObject()?.DestroySelf();
+            }
+        }
+
+
+        // --- SERVER LOGIC ---
+
+        /// <summary>
+        /// Sends movement vector to the server.
+        /// </summary>
+        /// <param name="movementVector">Movement vector.</param>
+        [ServerRpc]
+        private void SendMovementVectorServerRpc(Vector2 movementVector) {
             var movementDirection = new Vector3(movementVector.x, 0, movementVector.y);
-            _isWalking = movementDirection != Vector3.zero;
-
             HandleMovement(movementDirection);
-            UpdateSelectedCounter();
-        }
-
-        public override void OnNetworkSpawn() {
-            _multiplayerManager = MultiplayerManager.Instance;
-            if (IsServer) {
-                var playerDataIndex = _multiplayerManager.GetPlayerDataIndex(OwnerClientId);
-                transform.position = spawnPositions[playerDataIndex];
-                NetworkManager.Singleton.OnClientDisconnectCallback += OnClientDisconnectCallbackAction;
-            }
-            
-            if (!IsOwner) return;
-
-            Logger.LogInitializingInstance(this);
-            if (LocalInstance != null) {
-                Logger.LogMultipleInstancesError(this);
-                Destroy(gameObject);
-                return;
-            }
-            LocalInstance = this;
-            Logger.LogInstanceInitialized(this);
-
-            OnLocalPlayerNetworkSpawned?.Invoke(this, EventArgs.Empty);
         }
 
 
@@ -218,6 +298,8 @@ namespace Game.Player {
             // Move
             var movement = movementDirection * (speed * Time.deltaTime);
             transform.position += movement;
+
+            UpdateSelectedCounter();
         }
 
         /// <summary>
@@ -236,7 +318,6 @@ namespace Game.Player {
             );
         }
 
-        
         /// <summary>
         /// Updates which counter the player is currently targeting.
         /// </summary>
@@ -266,47 +347,83 @@ namespace Game.Player {
         /// <param name="counter">The counter to select.</param>
         private void SetSelectedCounter(BaseCounter counter) {
             _selectedCounter = counter;
-            OnSelectedCounterChanged?.Invoke(
-                this,
-                new OnSelectedCounterChangedArgs { SelectedCounter = _selectedCounter }
+            _selectedCounterRef.Value = counter
+                ? counter.GetNetworkObject()
+                : default;
+
+            // Only for owner client
+            TriggerOnSelectedCounterChangedClientRpc(
+                new ClientRpcParams {
+                    Send = new ClientRpcSendParams {
+                        TargetClientIds = new[] { OwnerClientId }
+                    }
+                }
             );
         }
 
 
         /// <summary>
-        /// Handles interaction input event.
+        /// Sends interact performed action to the server.
         /// </summary>
-        /// <remarks>
-        /// Invoked when the <see cref="InputManager.OnInteractPerformed"/> event is triggered.
-        /// </remarks>
-        private void OnInteractPerformedAction(object sender, EventArgs e) {
+        [ServerRpc]
+        private void InteractPerformedServerRpc() {
             if (!_gameManager.IsPlaying()) return;
 
             _selectedCounter?.Interact(this);
         }
 
         /// <summary>
-        /// Handles alternate interaction input event.
+        /// Sends alternate interact performed action to the server.
         /// </summary>
-        /// <remarks>
-        /// Invoked when the <see cref="InputManager.OnInteractAlternatePerformed"/> event is triggered.
-        /// </remarks>
-        private void OnInteractAlternatePerformedAction(object sender, EventArgs e) {
+        [ServerRpc]
+        private void AlternateInteractPerformedServerRpc() {
             if (!_gameManager.IsPlaying()) return;
 
             _selectedCounter?.InteractAlternate();
         }
 
+
+        // --- CLIENT LOGIC ---
+
         /// <summary>
-        /// Destroys any held kitchen object.
+        /// Triggers <see cref="OnSelectedCounterChanged"/> for the owner client.
         /// </summary>
-        /// <remarks>
-        /// Invoked when the <see cref="NetworkManager.OnClientDisconnectCallback"/> event is triggered.
-        /// </remarks>
-        private void OnClientDisconnectCallbackAction(ulong clientId) {
-            if (OwnerClientId == clientId) {
-                GetKitchenObject()?.DestroySelf();
+        /// <param name="rpcParams">Client RPC params.</param>
+        [ClientRpc]
+        private void TriggerOnSelectedCounterChangedClientRpc(
+            [SuppressMessage("ReSharper", "UnusedParameter.Local")]
+            ClientRpcParams rpcParams = default
+        ) {
+            if (!_selectedCounterRef.Value.TryGet(out var counterNetworkObject)) {
+                counterNetworkObject = null;
             }
+            var counter = counterNetworkObject?.GetComponent<BaseCounter>();
+            OnSelectedCounterChanged?.Invoke(
+                this,
+                new OnSelectedCounterChangedArgs { SelectedCounter = counter }
+            );
+        }
+
+        /// <summary>
+        /// Triggers <see cref="OnAnyObjectPickup"/> for the owner client.
+        /// </summary>
+        [ClientRpc]
+        private void TriggerOnAnyObjectPickupClientRpc() {
+            OnAnyObjectPickup?.Invoke(
+                this,
+                new OnAnyObjectPickupArgs { Position = transform.position }
+            );
+        }
+
+        /// <summary>
+        /// Triggers <see cref="OnAnyObjectDrop"/> for the owner client.
+        /// </summary>
+        [ClientRpc]
+        private void TriggerOnAnyObjectDropClientRpc() {
+            OnAnyObjectDrop?.Invoke(
+                this,
+                new OnAnyObjectDropArgs { Position = transform.position }
+            );
         }
     }
 }

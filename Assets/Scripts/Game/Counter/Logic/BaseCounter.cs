@@ -13,6 +13,9 @@ namespace Game.Counter.Logic {
         private Transform counterTopPoint;
 
 
+        /// <remarks>
+        /// This field is only updated in the server.
+        /// </remarks>
         private KitchenObject.KitchenObject _kitchenObject;
 
 
