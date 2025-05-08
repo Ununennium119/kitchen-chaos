@@ -237,6 +237,11 @@ namespace Common.Logic {
             NetworkManager.ConnectionApprovalRequest request,
             NetworkManager.ConnectionApprovalResponse response
         ) {
+            // Host is approved
+            if (request.ClientNetworkId == 0) {
+                response.Approved = true;
+                return;
+            }
             if (!SceneLoader.IsSceneActive(SceneLoader.Scene.CharacterSelectScene)) {
                 response.Approved = false;
                 response.Reason = "Game started already!";
